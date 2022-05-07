@@ -6,7 +6,12 @@ namespace Hotels.Database
     public class HotelContext : DbContext
     {
         public HotelContext(DbContextOptions<HotelContext> options) : base(options) { } // service creation constructor
-        public HotelContext() : base() { }
+        public HotelContext() : base(new DbContextOptionsBuilder<HotelContext>()
+            .UseNpgsql(ConnString)
+            .LogTo(Console.WriteLine, LogLevel.Information)
+            .Options) { }
+
+        public static string ConnString { get; set; }
         public virtual DbSet<Country> Countries { get; set; }
         public virtual DbSet<Hotel> Hotels { get; set; }
         public virtual DbSet<Attraction> Attractions { get; set; }

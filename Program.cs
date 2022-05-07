@@ -7,6 +7,8 @@ using Hotels.Consumers;
 using Models.Hotels;
 
 var builder = WebApplication.CreateBuilder(args);
+HotelContext.ConnString = builder.Configuration.GetConnectionString("PsqlConnection");
+//initDB();
 
 // configuration for mass transit
 builder.Services.AddMassTransit(cfg =>
@@ -29,8 +31,7 @@ builder.Services.AddMassTransit(cfg =>
 });
 
 var app = builder.Build();
-var connString = builder.Configuration.GetConnectionString("PsqlConnection");
-//initDB();
+
 
 // bus for publishing a message, to check if everything works
 // THIS SHOULD NOT EXIST IN FINAL PROJECT
@@ -42,20 +43,14 @@ var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
         h.Password("guest");
     });
 });
-Console.WriteLine("\n\n\npublishing GetHotelsEvent");
 busControl.Start();
-await busControl.Publish<GetHotelsEvent>(new GetHotelsEvent("Grecja", "basen"));
+await busControl.Publish<GetHotelsEvent>(new GetHotelsEvent("Grecja", "pla¿a"));
 busControl.Stop();
 app.Run();
 
 void initDB()
 {
-    var options = new DbContextOptionsBuilder<HotelContext>()
-        .UseNpgsql(connString)
-        .LogTo(Console.WriteLine, LogLevel.Information)
-        .Options;
-
-    using (var context = new HotelContext(options))
+    using (var context = new HotelContext())
     {
         //context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
