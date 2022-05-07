@@ -1,15 +1,51 @@
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
+
 using Hotels.Database;
 using Hotels.Database.Tables;
-using Microsoft.EntityFrameworkCore;
+using Hotels.Consumers;
+using Models.Hotels;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// configuration for mass transit
+builder.Services.AddMassTransit(cfg =>
+{
+    // adding consumers
+    cfg.AddConsumer<GetHotelsEventConsumer>();
+
+    // telling masstransit to use rabbitmq
+    cfg.UsingRabbitMq((context, rabbitCfg) =>
+    {
+        // rabbitmq config
+        rabbitCfg.Host("rabbitmq", "/", h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+        // automatic endpoint configuration (and I think the reason why naming convention is important
+        rabbitCfg.ConfigureEndpoints(context);
+    });
+});
+
 var app = builder.Build();
 var connString = builder.Configuration.GetConnectionString("PsqlConnection");
-//var manager = new EventManager(connString);
-initDB();
-//manager.ListenForEvents();
+//initDB();
 
+// bus for publishing a message, to check if everything works
+// THIS SHOULD NOT EXIST IN FINAL PROJECT
+var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
+{
+    cfg.Host("rabbitmq", "/", h =>
+    {
+        h.Username("guest");
+        h.Password("guest");
+    });
+});
+Console.WriteLine("\n\n\npublishing GetHotelsEvent");
+busControl.Start();
+await busControl.Publish<GetHotelsEvent>(new GetHotelsEvent("Grecja", "basen"));
+busControl.Stop();
 app.Run();
 
 void initDB()
