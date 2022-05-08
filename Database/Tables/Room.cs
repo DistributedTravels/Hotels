@@ -13,6 +13,6 @@ namespace Hotels.Database.Tables
 
         public Hotel Hotel { get; set; }
         public List<Reservation> Reservations { get; set; }
-        public List<CharacteristicOfRoom> CharacteristicOfRooms { get; set; }
+        public List<CharacteristicOfRoom> CharacteristicsOfRoom { get; set; }
     }
 }

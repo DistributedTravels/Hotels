@@ -8,7 +8,6 @@ using Models.Hotels;
 
 var builder = WebApplication.CreateBuilder(args);
 var connString = builder.Configuration.GetConnectionString("PsqlConnection");
-//initDB();
 
 builder.Services.AddDbContext<HotelContext>(
     DbContextOptions => DbContextOptions
@@ -39,27 +38,28 @@ builder.Services.AddMassTransit(cfg =>
 });
 
 var app = builder.Build();
-
+initDB();
 
 // bus for publishing a message, to check if everything works
 // THIS SHOULD NOT EXIST IN FINAL PROJECT
-var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
-{
-    cfg.Host("rabbitmq", "/", h =>
-    {
-        h.Username("guest");
-        h.Password("guest");
-    });
-});
-busControl.Start();
-await busControl.Publish<GetHotelsEvent>(new GetHotelsEvent("Grecja", "pla¿a"));
-busControl.Stop();
+//var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
+//{
+//    cfg.Host("rabbitmq", "/", h =>
+//    {
+//        h.Username("guest");
+//        h.Password("guest");
+//    });
+//});
+//busControl.Start();
+//await busControl.Publish<GetHotelsEvent>(new GetHotelsEvent("Grecja", "pla¿a"));
+//busControl.Stop();
 
 app.Run();
 
 void initDB()
 {
-    using (var context = new HotelContext())
+    using (var contScope = app.Services.CreateScope())
+    using (var context = contScope.ServiceProvider.GetRequiredService<HotelContext>())
     {
         //context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
@@ -116,6 +116,84 @@ void initDB()
         searched_hotel.AttractionsInHotel.Add(attraction_in_hotel);
         searched_attraction.HotelsWithAttraction.Add(attraction_in_hotel);
         context.SaveChanges(); // save to DB
+
+        searched_hotel = context.Hotels.Include(b => b.Rooms).Single(b => b.Name.Equals("Hotel Acharavi Mare"));
+        var room = new Room
+        {
+            NumberOfPersons = 2,
+            CharacteristicsOfRoom = new List<CharacteristicOfRoom> { },
+            Reservations = new List<Reservation> { }
+        };
+        searched_hotel.Rooms.Add(room);
+        room = new Room
+        {
+            NumberOfPersons = 4,
+            CharacteristicsOfRoom = new List<CharacteristicOfRoom> { },
+            Reservations = new List<Reservation> { }
+        };
+        searched_hotel.Rooms.Add(room);
+        searched_hotel = context.Hotels.Include(b => b.Rooms).Single(b => b.Name.Equals("Hotel Aldemar Royal Olympian"));
+        room = new Room
+        {
+            NumberOfPersons = 2,
+            CharacteristicsOfRoom = new List<CharacteristicOfRoom> { },
+            Reservations = new List<Reservation> { }
+        };
+        searched_hotel.Rooms.Add(room);
+        searched_hotel = context.Hotels.Include(b => b.Rooms).Single(b => b.Name.Equals("Hotel Bg Pamplona"));
+        room = new Room
+        {
+            NumberOfPersons = 2,
+            CharacteristicsOfRoom = new List<CharacteristicOfRoom> { },
+            Reservations = new List<Reservation> { }
+        };
+        searched_hotel.Rooms.Add(room);
+        room = new Room
+        {
+            NumberOfPersons = 4,
+            CharacteristicsOfRoom = new List<CharacteristicOfRoom> { },
+            Reservations = new List<Reservation> { }
+        };
+        searched_hotel.Rooms.Add(room);
+        context.SaveChanges();
+
+        var characteristic = new Characteristic
+        {
+            Description = "widok na morze",
+            CharacteristicOfRooms = new List<CharacteristicOfRoom> { }
+        };
+        context.Characteristics.Add(characteristic);
+        context.SaveChanges();
+
+        var searched_room = context.Rooms.Include(b => b.Hotel).Include(b => b.CharacteristicsOfRoom)
+            .Where(b => b.Hotel.Name.Equals("Hotel Acharavi Mare"))
+            .Where(b => b.NumberOfPersons == 2).First();
+        var searched_characteristic = context.Characteristics.Include(b => b.CharacteristicOfRooms)
+            .Single(b => b.Description.Equals("widok na morze"));
+        var characteristic_of_room = new CharacteristicOfRoom { };
+        searched_room.CharacteristicsOfRoom.Add(characteristic_of_room);
+        searched_characteristic.CharacteristicOfRooms.Add(characteristic_of_room);
+        searched_room = context.Rooms.Include(b => b.Hotel).Include(b => b.CharacteristicsOfRoom)
+            .Where(b => b.Hotel.Name.Equals("Hotel Aldemar Royal Olympian"))
+            .Where(b => b.NumberOfPersons == 2).First();
+        searched_characteristic = context.Characteristics.Include(b => b.CharacteristicOfRooms)
+            .Single(b => b.Description.Equals("widok na morze"));
+        characteristic_of_room = new CharacteristicOfRoom { };
+        searched_room.CharacteristicsOfRoom.Add(characteristic_of_room);
+        searched_characteristic.CharacteristicOfRooms.Add(characteristic_of_room);
+        context.SaveChanges();
+
+        searched_room = context.Rooms.Include(b => b.Hotel).Include(b => b.CharacteristicsOfRoom)
+            .Include(b => b.Reservations)
+            .Where(b => b.Hotel.Name.Equals("Hotel Aldemar Royal Olympian"))
+            .Where(b => b.CharacteristicsOfRoom.Any(b => b.Characteristic.Description.Equals("widok na morze"))).First();
+        var reservation = new Reservation
+        {
+            BeginTime = new DateTime(2022, 1, 19).ToUniversalTime(),
+            EndTime = new DateTime(2022, 2, 14).ToUniversalTime()
+        };
+        searched_room.Reservations.Add(reservation);
+        context.SaveChanges();
 
         Console.WriteLine("Done inserting test data");
     }
