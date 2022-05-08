@@ -7,8 +7,16 @@ using Hotels.Consumers;
 using Models.Hotels;
 
 var builder = WebApplication.CreateBuilder(args);
-HotelContext.ConnString = builder.Configuration.GetConnectionString("PsqlConnection");
+var connString = builder.Configuration.GetConnectionString("PsqlConnection");
 //initDB();
+
+builder.Services.AddDbContext<HotelContext>(
+    DbContextOptions => DbContextOptions
+        .UseNpgsql(connString)
+        .LogTo(Console.WriteLine, LogLevel.Information)
+        .EnableSensitiveDataLogging()
+        .EnableDetailedErrors()
+);
 
 // configuration for mass transit
 builder.Services.AddMassTransit(cfg =>
@@ -46,6 +54,7 @@ var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
 busControl.Start();
 await busControl.Publish<GetHotelsEvent>(new GetHotelsEvent("Grecja", "pla¿a"));
 busControl.Stop();
+
 app.Run();
 
 void initDB()
@@ -109,6 +118,5 @@ void initDB()
         context.SaveChanges(); // save to DB
 
         Console.WriteLine("Done inserting test data");
-        // manager.Publish(new ReserveTransportEvent(1));
     }
 }
