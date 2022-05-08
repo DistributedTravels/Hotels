@@ -8,10 +8,13 @@ namespace Hotels.Database.Tables
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required]
         public string Name { get; set; }
-        public Country Country { get; set; }
-        public List<AttractionInHotel> AttractionsInHotel { get; set; }
+        public string Country { get; set; }
+        
+        //potetially could be more conveniences
+        public bool HasBreakfast { get; set; }
+        public bool HasInternet { get; set; }
+
         public List<Room> Rooms { get; set; }
     }
 }

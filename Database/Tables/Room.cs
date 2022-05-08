@@ -8,11 +8,10 @@ namespace Hotels.Database.Tables
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required]
-        public int NumberOfPersons { get; set; }
+        public string Type { get; set; }
 
+        public int HotelId { get; set; }
         public Hotel Hotel { get; set; }
         public List<Reservation> Reservations { get; set; }
-        public List<CharacteristicOfRoom> CharacteristicsOfRoom { get; set; }
     }
 }
