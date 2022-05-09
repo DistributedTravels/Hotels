@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hotels.Consumers
 {
-    public static class AdditionalFunctions
+    public class AdditionalFunctions
     {
         public static Boolean checkIfRoomsAbleToReserve(List<Room> searched_rooms,
             int appartmentsAmountToFind, int casualRoomAmountToFind,

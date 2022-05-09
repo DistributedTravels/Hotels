@@ -25,13 +25,25 @@ namespace Hotels.Consumers
                 $"BeginDate: {taskContext.Message.BeginDate},\n" +
                 $"EndDate: {taskContext.Message.EndDate},\n" +
                 $"AppartmentsAmount: {taskContext.Message.AppartmentsAmount},\n" +
-                $"CasualRoomAmount: {taskContext.Message.CasualRoomAmount},\n\n"
+                $"CasualRoomAmount: {taskContext.Message.CasualRoomAmount},\n" +
+                $"Breakfast: {taskContext.Message.Breakfast},\n" +
+                $"Internet: {taskContext.Message.Wifi}\n\n"
             );
 
-            var searched_rooms = hotelContext.Rooms
+            var searched_rooms_query = hotelContext.Rooms
+                .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.HotelId == taskContext.Message.HotelId)
-                .ToList();
+                .Where(b => b.HotelId == taskContext.Message.HotelId);
+            if (taskContext.Message.Breakfast)
+            {
+                searched_rooms_query = searched_rooms_query.Where(b => b.Hotel.HasBreakfast == true);
+            }
+            if (taskContext.Message.Wifi)
+            {
+                searched_rooms_query = searched_rooms_query.Where(b => b.Hotel.HasWifi == true);
+            }
+            var searched_rooms = searched_rooms_query.ToList();
+
             Boolean can_be_reserved = AdditionalFunctions.checkIfRoomsAbleToReserve(
                     searched_rooms,
                     taskContext.Message.AppartmentsAmount,
@@ -48,15 +60,29 @@ namespace Hotels.Consumers
                     $"BeginDate: {taskContext.Message.BeginDate},\n" +
                     $"EndDate: {taskContext.Message.EndDate},\n" +
                     $"AppartmentsAmount: {taskContext.Message.AppartmentsAmount},\n" +
-                    $"CasualRoomAmount: {taskContext.Message.CasualRoomAmount},\n\n"
+                    $"CasualRoomAmount: {taskContext.Message.CasualRoomAmount},\n" +
+                    $"Breakfast: {taskContext.Message.Breakfast},\n" +
+                    $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
                 await taskContext.Publish<ReserveRoomsEventReply>(
-                    new ReserveRoomsEventReply(ReserveRoomsEventReply.State.NOT_RESERVED, taskContext.Message.CorrelationId));
+                    new ReserveRoomsEventReply(ReserveRoomsEventReply.State.NOT_RESERVED, 0.0, taskContext.Message.CorrelationId));
             }
             else
             {
+                int persons_counter = 0;
                 int appartmentsAmountToFind = taskContext.Message.AppartmentsAmount;
                 int casualRoomAmountToFind = taskContext.Message.CasualRoomAmount;
+                int numOfNights = (taskContext.Message.EndDate - taskContext.Message.BeginDate).Days;
+                double price;
+                if (searched_rooms.Count > 0)
+                {
+                    price = searched_rooms[0].Hotel.PriceForNightForPerson;
+                }
+                else
+                {
+                    price = 0.0;
+                } 
+
                 foreach (var room in searched_rooms)
                 {
                     Boolean able_to_reserve = false;
@@ -75,6 +101,7 @@ namespace Hotels.Consumers
                         if (able_to_reserve)
                         {
                             appartmentsAmountToFind--;
+                            persons_counter += 4;
                         }
                     }
                     if (room.Type.Equals("2 person") && casualRoomAmountToFind > 0)
@@ -92,6 +119,7 @@ namespace Hotels.Consumers
                         if (able_to_reserve)
                         {
                             casualRoomAmountToFind--;
+                            persons_counter += 2;
                         }
                     }
                     if (able_to_reserve)
@@ -114,6 +142,7 @@ namespace Hotels.Consumers
                         break;
                     }
                 }
+                var total_price = price * persons_counter * numOfNights;
                 Console.WriteLine(
                     $"\n\nReserved with these parameters\n" +
                     $"UserId: {taskContext.Message.UserId},\n" +
@@ -122,11 +151,18 @@ namespace Hotels.Consumers
                     $"BeginDate: {taskContext.Message.BeginDate},\n" +
                     $"EndDate: {taskContext.Message.EndDate},\n" +
                     $"AppartmentsAmount: {taskContext.Message.AppartmentsAmount},\n" +
-                    $"CasualRoomAmount: {taskContext.Message.CasualRoomAmount},\n\n"
+                    $"CasualRoomAmount: {taskContext.Message.CasualRoomAmount},\n" +
+                    $"price: {price},\n" +
+                    $"numOfNights: {numOfNights},\n" +
+                    $"persons_counter: {persons_counter},\n" +
+                    $"total_price: {total_price},\n" +
+                    $"Breakfast: {taskContext.Message.Breakfast},\n" +
+                    $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
                 await taskContext.Publish<ReserveRoomsEventReply>(
                     new ReserveRoomsEventReply(
-                        ReserveRoomsEventReply.State.RESERVED, 
+                        ReserveRoomsEventReply.State.RESERVED,
+                        price,
                         taskContext.Message.CorrelationId));
             }
         }

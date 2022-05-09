@@ -13,7 +13,8 @@ namespace Hotels.Database.Tables
         
         //potetially could be more conveniences
         public bool HasBreakfast { get; set; }
-        public bool HasInternet { get; set; }
+        public bool HasWifi { get; set; }
+        public double PriceForNightForPerson { get; set; }
 
         public List<Room> Rooms { get; set; }
     }

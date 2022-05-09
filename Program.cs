@@ -55,21 +55,18 @@ var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
 });
 busControl.Start();
 
-//await busControl.Publish<GetHotelsEvent>(
-//    new GetHotelsEvent(
-//        "Grecja",
-//        new DateTime(2022, 5, 1).ToUniversalTime(),
-//        new DateTime(2022, 6, 6).ToUniversalTime(),
-//        4, 4, false, false));
+await busControl.Publish<GetHotelsEvent>(
+    new GetHotelsEvent("Grecja"));
 
 await busControl.Publish<ReserveRoomsEvent>(
     new ReserveRoomsEvent(
-        1,
+        3,
         new DateTime(2022, 6, 1).ToUniversalTime(),
         new DateTime(2022, 6, 6).ToUniversalTime(),
-        4, 4,
+        2, 2,
         new Guid(1, 2, 3, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }),
-        new Guid(3, 2, 1, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 })));
+        new Guid(3, 2, 1, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }),
+        false, true));
 
 //await busControl.Publish<UnreserveRoomsEvent>(
 //    new UnreserveRoomsEvent(
@@ -92,7 +89,8 @@ void initDB()
             Name = "Hotel Acharavi Mare",
             Country = "Grecja",
             HasBreakfast = true,
-            HasInternet = true,
+            HasWifi = true,
+            PriceForNightForPerson = 50.0,
             Rooms = new List<Room>
             {
                 new Room
@@ -155,7 +153,8 @@ void initDB()
             Name = "Hotel Aldemar Royal Olympian",
             Country = "Grecja",
             HasBreakfast = true,
-            HasInternet = false,
+            HasWifi = false,
+            PriceForNightForPerson = 60.0,
             Rooms = new List<Room>
             {
                 new Room
@@ -184,9 +183,10 @@ void initDB()
         hotel = new Hotel
         {
             Name = "Hotel Bg Pamplona",
-            Country = "Grecja",
+            Country = "Hiszpania",
             HasBreakfast = false,
-            HasInternet = true,
+            HasWifi = true,
+            PriceForNightForPerson = 70.0,
             Rooms = new List<Room>
             {
                 new Room
@@ -204,6 +204,23 @@ void initDB()
                     Type = "2 person",
                     Reservations = new List<Reservation>{}
                 },
+                new Room
+                {
+                    Type = "2 person",
+                    Reservations = new List<Reservation>{}
+                }
+            }
+        };
+        context.Hotels.Add(hotel);
+        hotel = new Hotel
+        {
+            Name = "Small hotel",
+            Country = "Hiszpania",
+            HasBreakfast = false,
+            HasWifi = true,
+            PriceForNightForPerson = 80.0,
+            Rooms = new List<Room>
+            {
                 new Room
                 {
                     Type = "2 person",
