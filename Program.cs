@@ -22,6 +22,7 @@ builder.Services.AddMassTransit(cfg =>
 {
     // adding consumers
     cfg.AddConsumer<GetHotelsEventConsumer>();
+    cfg.AddConsumer<ReserveRoomsEventConsumer>();
 
     // telling masstransit to use rabbitmq
     cfg.UsingRabbitMq((context, rabbitCfg) =>
@@ -52,12 +53,21 @@ var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
     });
 });
 busControl.Start();
-await busControl.Publish<GetHotelsEvent>(
-    new GetHotelsEvent(
-        "Grecja",
-        new DateTime(2022, 4, 1),
-        new DateTime(2022, 4, 7),
-        4, 4, true, true));
+
+//await busControl.Publish<GetHotelsEvent>(
+//    new GetHotelsEvent(
+//        "Grecja",
+//        new DateTime(2022, 5, 1).ToUniversalTime(),
+//        new DateTime(2022, 6, 6).ToUniversalTime(),
+//        4, 4, false, false));
+
+await busControl.Publish<ReserveRoomsEvent>(
+    new ReserveRoomsEvent(
+        1,
+        new DateTime(2022, 6, 1).ToUniversalTime(),
+        new DateTime(2022, 6, 6).ToUniversalTime(),
+        4, 4, new Guid(1, 2, 3, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 })));
+
 busControl.Stop();
 
 app.Run();

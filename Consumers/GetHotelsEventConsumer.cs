@@ -41,55 +41,15 @@ namespace Hotels.Consumers
             List<HotelItem> hotel_items = new List<HotelItem>();
             foreach (var hotel in searched_hotels.ToList())
             {
-                var searched_rooms = hotelContext.Rooms.Include(b => b.Reservations).Where(b => b.HotelId == hotel.Id).ToList();
-                var appartmentsAmountToFind = taskContext.Message.AppartmentsAmount;
-                var casualRoomAmountToFind = taskContext.Message.CasualRoomAmount;
-                foreach (var room in searched_rooms)
+                Boolean can_be_reserved = AdditionalFunctions.checkIfRoomsAbleToReserve(
+                    hotelContext.Rooms.Include(b => b.Reservations).Where(b => b.HotelId == hotel.Id).ToList(),
+                    taskContext.Message.AppartmentsAmount,
+                    taskContext.Message.CasualRoomAmount,
+                    taskContext.Message.BeginDate,
+                    taskContext.Message.EndDate);
+                if (can_be_reserved)
                 {
-                    Console.WriteLine(
-                        $"\n\nappartmentsAmountToFind: {appartmentsAmountToFind},\n" +
-                        $"casualRoomAmountToFind: {casualRoomAmountToFind},\n" +
-                        $"room.Id: {room.Id},\n\n"
-                    );
-                    if (room.Type.Equals("appartment") && appartmentsAmountToFind > 0)
-                    {
-                        Boolean able_to_reserve = true;
-                        foreach (var reservation in room.Reservations)
-                        {
-                            if (DateTime.Compare(reservation.EndDate, taskContext.Message.BeginDate) > 0 && 
-                                DateTime.Compare(reservation.BeginDate, taskContext.Message.EndDate) < 0)
-                            {
-                                able_to_reserve = false;
-                                break;
-                            }
-                        }
-                        if (able_to_reserve)
-                        {
-                            appartmentsAmountToFind--;
-                        }
-                    }
-                    if (room.Type.Equals("2 person") && casualRoomAmountToFind > 0)
-                    {
-                        Boolean able_to_reserve = true;
-                        foreach (var reservation in room.Reservations)
-                        {
-                            if (DateTime.Compare(reservation.EndDate, taskContext.Message.BeginDate) > 0 &&
-                                DateTime.Compare(reservation.BeginDate, taskContext.Message.EndDate) < 0)
-                            {
-                                able_to_reserve = false;
-                                break;
-                            }
-                        }
-                        if (able_to_reserve)
-                        {
-                            casualRoomAmountToFind--;
-                        }
-                    }
-                    if (appartmentsAmountToFind <= 0 && casualRoomAmountToFind <= 0)
-                    {
-                        hotel_items.Add(new HotelItem(hotel.Id, hotel.Name));
-                        break;
-                    }
+                    hotel_items.Add(new HotelItem(hotel.Id, hotel.Name));
                 }
             }
 
