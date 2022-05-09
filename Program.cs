@@ -23,6 +23,7 @@ builder.Services.AddMassTransit(cfg =>
     // adding consumers
     cfg.AddConsumer<GetHotelsEventConsumer>();
     cfg.AddConsumer<ReserveRoomsEventConsumer>();
+    cfg.AddConsumer<UnreserveRoomsEventConsumer>();
 
     // telling masstransit to use rabbitmq
     cfg.UsingRabbitMq((context, rabbitCfg) =>
@@ -66,7 +67,13 @@ await busControl.Publish<ReserveRoomsEvent>(
         1,
         new DateTime(2022, 6, 1).ToUniversalTime(),
         new DateTime(2022, 6, 6).ToUniversalTime(),
-        4, 4, new Guid(1, 2, 3, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 })));
+        4, 4,
+        new Guid(1, 2, 3, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }),
+        new Guid(3, 2, 1, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 })));
+
+//await busControl.Publish<UnreserveRoomsEvent>(
+//    new UnreserveRoomsEvent(
+//        new Guid(3, 2, 1, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 })));
 
 busControl.Stop();
 

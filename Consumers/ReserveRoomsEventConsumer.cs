@@ -20,6 +20,7 @@ namespace Hotels.Consumers
             Console.WriteLine(
                 $"\n\nReceived message:\n" +
                 $"UserId: {taskContext.Message.UserId},\n" +
+                $"ReservationNumber: {taskContext.Message.ReservationNumber},\n" +
                 $"HotelId: {taskContext.Message.HotelId},\n" +
                 $"BeginDate: {taskContext.Message.BeginDate},\n" +
                 $"EndDate: {taskContext.Message.EndDate},\n" +
@@ -42,6 +43,7 @@ namespace Hotels.Consumers
                 Console.WriteLine(
                     $"\n\nCan not reserve with these parameters\n" +
                     $"UserId: {taskContext.Message.UserId},\n" +
+                    $"ReservationNumber: {taskContext.Message.ReservationNumber},\n" +
                     $"HotelId: {taskContext.Message.HotelId},\n" +
                     $"BeginDate: {taskContext.Message.BeginDate},\n" +
                     $"EndDate: {taskContext.Message.EndDate},\n" +
@@ -100,6 +102,7 @@ namespace Hotels.Consumers
                         var added_reservation = new Reservation
                         {
                             UserId = taskContext.Message.UserId,
+                            ReservationNumber = taskContext.Message.ReservationNumber,
                             BeginDate = taskContext.Message.BeginDate,
                             EndDate = taskContext.Message.EndDate
                         };
@@ -114,6 +117,7 @@ namespace Hotels.Consumers
                 Console.WriteLine(
                     $"\n\nReserved with these parameters\n" +
                     $"UserId: {taskContext.Message.UserId},\n" +
+                    $"ReservationNumber: {taskContext.Message.ReservationNumber},\n" +
                     $"HotelId: {taskContext.Message.HotelId},\n" +
                     $"BeginDate: {taskContext.Message.BeginDate},\n" +
                     $"EndDate: {taskContext.Message.EndDate},\n" +
@@ -121,7 +125,9 @@ namespace Hotels.Consumers
                     $"CasualRoomAmount: {taskContext.Message.CasualRoomAmount},\n\n"
                 );
                 await taskContext.Publish<ReserveRoomsEventReply>(
-                    new ReserveRoomsEventReply(ReserveRoomsEventReply.State.RESERVED, taskContext.Message.CorrelationId));
+                    new ReserveRoomsEventReply(
+                        ReserveRoomsEventReply.State.RESERVED, 
+                        taskContext.Message.CorrelationId));
             }
         }
     }
