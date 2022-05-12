@@ -9,10 +9,22 @@ namespace Hotels.Consumers
 {
     public class AdditionalFunctions
     {
-        public static Boolean checkIfRoomsAbleToReserve(List<Room> searched_rooms,
+        public static double checkIfRoomsAbleToReserve(List<Room> searched_rooms,
             int appartmentsAmountToFind, int casualRoomAmountToFind,
-            DateTime beginDate, DateTime endDate)
+            DateTime beginDate, DateTime endDate,
+            List<Room> roomsToReserve)
         {
+            int persons_counter = 0;
+            int numOfNights = (endDate - beginDate).Days;
+            double price;
+            if (searched_rooms.Count > 0)
+            {
+                price = searched_rooms[0].Hotel.PriceForNightForPerson;
+            }
+            else
+            {
+                price = 0.0;
+            }
             foreach (var room in searched_rooms)
             {
                 Console.WriteLine(
@@ -20,9 +32,11 @@ namespace Hotels.Consumers
                     $"casualRoomAmountToFind: {casualRoomAmountToFind},\n" +
                     $"room.Id: {room.Id},\n\n"
                 );
+                Boolean able_to_reserve = false;
+                int persons_to_add = 0;
                 if (room.Type.Equals("appartment") && appartmentsAmountToFind > 0)
                 {
-                    Boolean able_to_reserve = true;
+                    able_to_reserve = true;
                     foreach (var reservation in room.Reservations)
                     {
                         if (DateTime.Compare(reservation.EndDate, beginDate) > 0 &&
@@ -35,11 +49,13 @@ namespace Hotels.Consumers
                     if (able_to_reserve)
                     {
                         appartmentsAmountToFind--;
+                        persons_counter += 4;
+                        roomsToReserve.Add(room);
                     }
                 }
                 if (room.Type.Equals("2 person") && casualRoomAmountToFind > 0)
                 {
-                    Boolean able_to_reserve = true;
+                    able_to_reserve = true;
                     foreach (var reservation in room.Reservations)
                     {
                         if (DateTime.Compare(reservation.EndDate, beginDate) > 0 &&
@@ -52,14 +68,16 @@ namespace Hotels.Consumers
                     if (able_to_reserve)
                     {
                         casualRoomAmountToFind--;
+                        persons_counter += 4;
+                        roomsToReserve.Add(room);
                     }
                 }
                 if (appartmentsAmountToFind <= 0 && casualRoomAmountToFind <= 0)
                 {
-                    return true;
+                    return price * persons_counter * numOfNights;
                 }
             }
-            return false;
+            return -1.0;
         }
     }
 }

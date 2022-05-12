@@ -7,20 +7,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hotels.Consumers
 {
-    public class ReserveRoomsEventConsumer : IConsumer<ReserveRoomsEvent>
+    public class GetInfoFromHotelEventConsumer : IConsumer<GetInfoFromHotelEvent>
     {
         private readonly HotelContext hotelContext;
-        public ReserveRoomsEventConsumer(HotelContext hotelContext)
+        public GetInfoFromHotelEventConsumer(HotelContext hotelContext)
         {
             this.hotelContext = hotelContext;
         }
 
-        public async Task Consume(ConsumeContext<ReserveRoomsEvent> taskContext) 
+        public async Task Consume(ConsumeContext<GetInfoFromHotelEvent> taskContext)
         {
             Console.WriteLine(
                 $"\n\nReceived message:\n" +
-                $"UserId: {taskContext.Message.UserId},\n" +
-                $"ReservationNumber: {taskContext.Message.ReservationNumber},\n" +
                 $"HotelId: {taskContext.Message.HotelId},\n" +
                 $"BeginDate: {taskContext.Message.BeginDate},\n" +
                 $"EndDate: {taskContext.Message.EndDate},\n" +
@@ -52,12 +50,10 @@ namespace Hotels.Consumers
                     taskContext.Message.BeginDate,
                     taskContext.Message.EndDate,
                     roomsToReserve);
-            if (price<=0.0)
+            if (price <= 0.0)
             {
                 Console.WriteLine(
                     $"\n\nCan not reserve with these parameters\n" +
-                    $"UserId: {taskContext.Message.UserId},\n" +
-                    $"ReservationNumber: {taskContext.Message.ReservationNumber},\n" +
                     $"HotelId: {taskContext.Message.HotelId},\n" +
                     $"BeginDate: {taskContext.Message.BeginDate},\n" +
                     $"EndDate: {taskContext.Message.EndDate},\n" +
@@ -66,27 +62,16 @@ namespace Hotels.Consumers
                     $"Breakfast: {taskContext.Message.Breakfast},\n" +
                     $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
-                await taskContext.Publish<ReserveRoomsEventReply>(
-                    new ReserveRoomsEventReply(ReserveRoomsEventReply.State.NOT_RESERVED, 0.0, taskContext.Message.CorrelationId));
+                await taskContext.Publish<GetInfoFromHotelEventReply>(
+                    new GetInfoFromHotelEventReply(
+                        GetInfoFromHotelEventReply.State.CAN_NOT_BE_RESERVED,
+                        0.0,
+                        taskContext.Message.CorrelationId));
             }
             else
             {
-                foreach (var room in roomsToReserve)
-                {
-                    var added_reservation = new Reservation
-                    {
-                        UserId = taskContext.Message.UserId,
-                        ReservationNumber = taskContext.Message.ReservationNumber,
-                        BeginDate = taskContext.Message.BeginDate,
-                        EndDate = taskContext.Message.EndDate
-                    };
-                    room.Reservations.Add(added_reservation);
-                }
-                hotelContext.SaveChanges();
                 Console.WriteLine(
-                    $"\n\nReserved with these parameters\n" +
-                    $"UserId: {taskContext.Message.UserId},\n" +
-                    $"ReservationNumber: {taskContext.Message.ReservationNumber},\n" +
+                    $"\n\nCan be reserved with these parameters\n" +
                     $"HotelId: {taskContext.Message.HotelId},\n" +
                     $"BeginDate: {taskContext.Message.BeginDate},\n" +
                     $"EndDate: {taskContext.Message.EndDate},\n" +
@@ -96,9 +81,9 @@ namespace Hotels.Consumers
                     $"Breakfast: {taskContext.Message.Breakfast},\n" +
                     $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
-                await taskContext.Publish<ReserveRoomsEventReply>(
-                    new ReserveRoomsEventReply(
-                        ReserveRoomsEventReply.State.RESERVED,
+                await taskContext.Publish<GetInfoFromHotelEventReply>(
+                    new GetInfoFromHotelEventReply(
+                        GetInfoFromHotelEventReply.State.CAN_BE_RESERVED,
                         price,
                         taskContext.Message.CorrelationId));
             }

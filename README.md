@@ -1,15 +1,15 @@
 # Hotels
 ## populating database
-uncomment (originally) line 43:
+uncomment (originally) line 44:
 ```
 //initDB();
 ```
 This function populate database with sample records (a few hotels with a few rooms, in the first hotel there two reservations on the first room).
 
-Definition of this function starts at line 79.
+Definition of this function starts at line 88.
 
 You can add room to the Hotel, by copying any ```new Room``` element, setting your values, and pasting in rooms' list of selected hotel (```Rooms = new List<Room>```)
-You can add more hotels by copying all ```hotel = new Hotel {<parameters>}``` section, setting your values and pasting before ```context.SaveChanges();``` (originally at line 232). Also remember to add ```context.Hotels.Add(hotel);```.
+You can add more hotels by copying all ```hotel = new Hotel {<parameters>}``` section, setting your values and pasting before ```context.SaveChanges();``` (originally at line 241). Also remember to add ```context.Hotels.Add(hotel);```.
 
 ## sample events
-(originally) at lines 45 -75 there are invoked sample events. Uncomment proper events to see their execution.
+(originally) at lines 46 - 84 there are invoked sample events. Uncomment proper events to see their execution.

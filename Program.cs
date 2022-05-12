@@ -22,6 +22,7 @@ builder.Services.AddMassTransit(cfg =>
 {
     // adding consumers
     cfg.AddConsumer<GetHotelsEventConsumer>();
+    cfg.AddConsumer<GetInfoFromHotelEventConsumer>();
     cfg.AddConsumer<ReserveRoomsEventConsumer>();
     cfg.AddConsumer<UnreserveRoomsEventConsumer>();
 
@@ -55,18 +56,26 @@ var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
 });
 busControl.Start();
 
-await busControl.Publish<GetHotelsEvent>(
-    new GetHotelsEvent("Grecja"));
+//await busControl.Publish<GetHotelsEvent>(
+//    new GetHotelsEvent("Grecja"));
 
-await busControl.Publish<ReserveRoomsEvent>(
-    new ReserveRoomsEvent(
+await busControl.Publish<GetInfoFromHotelEvent>(
+    new GetInfoFromHotelEvent(
         3,
         new DateTime(2022, 6, 1).ToUniversalTime(),
         new DateTime(2022, 6, 6).ToUniversalTime(),
         2, 2,
-        new Guid(1, 2, 3, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }),
-        new Guid(3, 2, 1, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }),
         false, true));
+
+//await busControl.Publish<ReserveRoomsEvent>(
+//    new ReserveRoomsEvent(
+//        1,
+//        new DateTime(2022, 6, 1).ToUniversalTime(),
+//        new DateTime(2022, 6, 7).ToUniversalTime(),
+//        4, 4,
+//        new Guid(1, 2, 3, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }),
+//        new Guid(3, 2, 1, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }),
+//        false, true));
 
 //await busControl.Publish<UnreserveRoomsEvent>(
 //    new UnreserveRoomsEvent(
