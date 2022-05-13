@@ -28,7 +28,7 @@ namespace Hotels.Consumers
                 hotelContext.Reservations.Remove(reservation);
             }
             hotelContext.SaveChanges();
-            await taskContext.Publish<UnreserveRoomsEventReply>(
+            await taskContext.RespondAsync<UnreserveRoomsEventReply>(
                     new UnreserveRoomsEventReply(
                         UnreserveRoomsEventReply.State.NOT_RESERVED, 
                         taskContext.Message.CorrelationId));

@@ -66,7 +66,7 @@ namespace Hotels.Consumers
                     $"Breakfast: {taskContext.Message.Breakfast},\n" +
                     $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
-                await taskContext.Publish<ReserveRoomsEventReply>(
+                await taskContext.RespondAsync<ReserveRoomsEventReply>(
                     new ReserveRoomsEventReply(ReserveRoomsEventReply.State.NOT_RESERVED, 0.0, taskContext.Message.CorrelationId));
             }
             else
@@ -96,7 +96,7 @@ namespace Hotels.Consumers
                     $"Breakfast: {taskContext.Message.Breakfast},\n" +
                     $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
-                await taskContext.Publish<ReserveRoomsEventReply>(
+                await taskContext.RespondAsync<ReserveRoomsEventReply>(
                     new ReserveRoomsEventReply(
                         ReserveRoomsEventReply.State.RESERVED,
                         price,

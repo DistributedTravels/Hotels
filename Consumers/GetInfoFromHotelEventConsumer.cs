@@ -62,7 +62,7 @@ namespace Hotels.Consumers
                     $"Breakfast: {taskContext.Message.Breakfast},\n" +
                     $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
-                await taskContext.Publish<GetInfoFromHotelEventReply>(
+                await taskContext.RespondAsync<GetInfoFromHotelEventReply>(
                     new GetInfoFromHotelEventReply(
                         GetInfoFromHotelEventReply.State.CAN_NOT_BE_RESERVED,
                         0.0,
@@ -81,7 +81,7 @@ namespace Hotels.Consumers
                     $"Breakfast: {taskContext.Message.Breakfast},\n" +
                     $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
-                await taskContext.Publish<GetInfoFromHotelEventReply>(
+                await taskContext.RespondAsync<GetInfoFromHotelEventReply>(
                     new GetInfoFromHotelEventReply(
                         GetInfoFromHotelEventReply.State.CAN_BE_RESERVED,
                         price,
