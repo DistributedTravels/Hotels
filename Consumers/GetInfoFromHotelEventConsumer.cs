@@ -34,7 +34,7 @@ namespace Hotels.Consumers
                 .Where(b => b.HotelId == taskContext.Message.HotelId);
             if (taskContext.Message.Breakfast)
             {
-                searched_rooms_query = searched_rooms_query.Where(b => b.Hotel.HasBreakfast == true);
+                searched_rooms_query = searched_rooms_query.Where(b => b.Hotel.BreakfastPrice > 0.0);
             }
             if (taskContext.Message.Wifi)
             {
@@ -47,6 +47,7 @@ namespace Hotels.Consumers
                     searched_rooms,
                     taskContext.Message.AppartmentsAmount,
                     taskContext.Message.CasualRoomAmount,
+                    taskContext.Message.Breakfast,
                     taskContext.Message.BeginDate,
                     taskContext.Message.EndDate,
                     roomsToReserve);

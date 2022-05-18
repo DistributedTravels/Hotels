@@ -12,7 +12,7 @@ namespace Hotels.Database.Tables
         public string Country { get; set; }
         
         //potetially could be more conveniences
-        public bool HasBreakfast { get; set; }
+        public double BreakfastPrice { get; set; }
         public bool HasWifi { get; set; }
         public double PriceForNightForPerson { get; set; }
 

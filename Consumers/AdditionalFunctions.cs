@@ -11,6 +11,7 @@ namespace Hotels.Consumers
     {
         public static double checkIfRoomsAbleToReserve(List<Room> searched_rooms,
             int appartmentsAmountToFind, int casualRoomAmountToFind,
+            bool breakfastChecked,
             DateTime beginDate, DateTime endDate,
             List<Room> roomsToReserve)
         {
@@ -20,6 +21,7 @@ namespace Hotels.Consumers
             if (searched_rooms.Count > 0)
             {
                 price = searched_rooms[0].Hotel.PriceForNightForPerson;
+                if (breakfastChecked) price += searched_rooms[0].Hotel.BreakfastPrice;
             }
             else
             {
