@@ -1,10 +1,6 @@
 # Hotels
 ## populating database
-uncomment (originally) line 44:
-```
-//initDB();
-```
-This function populate database with sample records (a few hotels with a few rooms, in the first hotel there two reservations on the first room).
+The ```initDB()``` function (invoked at line 44) populate database with sample records (a few hotels with a few rooms, in the first hotel there two reservations on the first room) if database is empty.
 
 Definition of this function starts at line 88.
 

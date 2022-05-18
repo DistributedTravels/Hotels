@@ -41,7 +41,7 @@ builder.Services.AddMassTransit(cfg =>
 });
 
 var app = builder.Build();
-//initDB();
+initDB();
 
 // bus for publishing a message, to check if everything works
 // THIS SHOULD NOT EXIST IN FINAL PROJECT
@@ -59,13 +59,13 @@ busControl.Start();
 //await busControl.Publish<GetHotelsEvent>(
 //    new GetHotelsEvent("Grecja"));
 
-await busControl.Publish<GetInfoFromHotelEvent>(
-    new GetInfoFromHotelEvent(
-        3,
-        new DateTime(2022, 6, 1).ToUniversalTime(),
-        new DateTime(2022, 6, 6).ToUniversalTime(),
-        2, 2,
-        false, true));
+//await busControl.Publish<GetInfoFromHotelEvent>(
+//    new GetInfoFromHotelEvent(
+//        3,
+//        new DateTime(2022, 6, 1).ToUniversalTime(),
+//        new DateTime(2022, 6, 6).ToUniversalTime(),
+//        2, 2,
+//        false, true));
 
 //await busControl.Publish<ReserveRoomsEvent>(
 //    new ReserveRoomsEvent(
@@ -92,6 +92,9 @@ void initDB()
     {
         //context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
+
+        var searched_hotels = context.Hotels.ToList();
+        if (searched_hotels.Any()) return;
 
         var hotel = new Hotel
         {
