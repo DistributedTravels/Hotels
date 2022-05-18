@@ -42,7 +42,7 @@ namespace Hotels.Consumers
             {
                 Console.WriteLine($"{ hotel.HotelItemId} { hotel.HotelName} { hotel.HotelCountry }");
             }
-            await taskContext.RespondAsync<GetHotelsEventReply>(new GetHotelsEventReply(hotel_items, taskContext.Message.CorrelationId));
+            await taskContext.RespondAsync<GetHotelsEventReply>(new GetHotelsEventReply(hotel_items, taskContext.Message.CorrelationId) {  HotelItems = hotel_items, CorrelationId = taskContext.Message.CorrelationId});
         }
     }
 }

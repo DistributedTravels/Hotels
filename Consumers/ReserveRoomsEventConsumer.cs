@@ -77,8 +77,8 @@ namespace Hotels.Consumers
                     {
                         UserId = taskContext.Message.UserId,
                         ReservationNumber = taskContext.Message.ReservationNumber,
-                        BeginDate = taskContext.Message.BeginDate,
-                        EndDate = taskContext.Message.EndDate
+                        BeginDate = taskContext.Message.BeginDate.ToUniversalTime(),
+                        EndDate = taskContext.Message.EndDate.ToUniversalTime()
                     };
                     room.Reservations.Add(added_reservation);
                 }
