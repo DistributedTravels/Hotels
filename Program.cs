@@ -97,7 +97,7 @@ void initDB()
         {
             Name = "Hotel Acharavi Mare",
             Country = "Grecja",
-            HasBreakfast = true,
+            BreakfastPrice = 3.0,
             HasWifi = true,
             PriceForNightForPerson = 50.0,
             Rooms = new List<Room>
@@ -161,7 +161,7 @@ void initDB()
         {
             Name = "Hotel Aldemar Royal Olympian",
             Country = "Grecja",
-            HasBreakfast = true,
+            BreakfastPrice = 4.0,
             HasWifi = false,
             PriceForNightForPerson = 60.0,
             Rooms = new List<Room>
@@ -193,7 +193,7 @@ void initDB()
         {
             Name = "Hotel Bg Pamplona",
             Country = "Hiszpania",
-            HasBreakfast = false,
+            BreakfastPrice = -1.0,
             HasWifi = true,
             PriceForNightForPerson = 70.0,
             Rooms = new List<Room>
@@ -225,7 +225,7 @@ void initDB()
         {
             Name = "Small hotel",
             Country = "Hiszpania",
-            HasBreakfast = false,
+            BreakfastPrice = -1.0,
             HasWifi = true,
             PriceForNightForPerson = 80.0,
             Rooms = new List<Room>
