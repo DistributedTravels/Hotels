@@ -1,11 +1,10 @@
 # Hotels
 ## populating database
-The ```initDB()``` function (invoked at line 44) populate database with sample records (a few hotels with a few rooms, in the first hotel there two reservations on the first room) if database is empty.
+The ```initDB()``` function (invoked at line 45) populate database with sample records if database is empty.
 
-Definition of this function starts at line 88.
+```initDB()``` function adds 90 hotels, which ```Name``` and ```Country``` properties are taken from file ```Init/hotels.json```. The rest of properties, like prices, facilities and rooms' lists are randomly generated.
 
-You can add room to the Hotel, by copying any ```new Room``` element, setting your values, and pasting in rooms' list of selected hotel (```Rooms = new List<Room>```)
-You can add more hotels by copying all ```hotel = new Hotel {<parameters>}``` section, setting your values and pasting before ```context.SaveChanges();``` (originally at line 241). Also remember to add ```context.Hotels.Add(hotel);```.
+Definition of this function starts at line 89.
 
 ## sample events
-(originally) at lines 46 - 84 there are invoked sample events. Uncomment proper events to see their execution.
+(originally) at lines 47 - 85 there are invoked sample events. Uncomment proper events to see their execution.

@@ -5,6 +5,7 @@ using Hotels.Database;
 using Hotels.Database.Tables;
 using Hotels.Consumers;
 using Models.Hotels;
+using Newtonsoft.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 var connString = builder.Configuration.GetConnectionString("PsqlConnection");
@@ -92,157 +93,73 @@ void initDB()
     {
         //context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
-
-        var searched_hotels = context.Hotels.ToList();
-        if (searched_hotels.Any()) return;
-
-        var hotel = new Hotel
+        if (!context.Hotels.Any())
         {
-            Name = "Hotel Acharavi Mare",
-            Country = "Grecja",
-            BreakfastPrice = 3.0,
-            HasWifi = true,
-            PriceForNightForPerson = 50.0,
-            Rooms = new List<Room>
+            using (var r = new StreamReader(@"Init/hotels.json"))
             {
-                new Room
+                string json = r.ReadToEnd();
+                List<HotelFromJson> hotelsFromJson = JsonConvert.DeserializeObject<List<HotelFromJson>>(json);
+                var random = new Random();
+                foreach (var hotelFromJson in hotelsFromJson)
                 {
-                    Type = "appartment",
-                    Reservations = new List<Reservation>
+                    var priceForNightForPerson = Math.Round(random.NextDouble() * (100.0 - 35.0) + 35.0, 2);
+                    double breakfastPrice;
+                    if (random.Next(3) == 0)
                     {
-                        new Reservation
-                        {
-                            BeginDate = new DateTime(2022, 5, 1).ToUniversalTime(),
-                            EndDate = new DateTime(2022, 6, 1).ToUniversalTime(),
-                        },
-                        new Reservation
-                        {
-                            BeginDate = new DateTime(2022, 6, 6).ToUniversalTime(),
-                            EndDate = new DateTime(2022, 6, 9).ToUniversalTime(),
-                        }
+                        breakfastPrice = -1.0;
                     }
-                },
-                new Room
-                {
-                    Type = "appartment",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "appartment",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "appartment",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                }
-            }
-        };
-        context.Hotels.Add(hotel);
-        hotel = new Hotel
-        {
-            Name = "Hotel Aldemar Royal Olympian",
-            Country = "Grecja",
-            BreakfastPrice = 4.0,
-            HasWifi = false,
-            PriceForNightForPerson = 60.0,
-            Rooms = new List<Room>
-            {
-                new Room
-                {
-                    Type = "appartment",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "appartment",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                }
-            }
-        };
-        context.Hotels.Add(hotel);
-        hotel = new Hotel
-        {
-            Name = "Hotel Bg Pamplona",
-            Country = "Hiszpania",
-            BreakfastPrice = -1.0,
-            HasWifi = true,
-            PriceForNightForPerson = 70.0,
-            Rooms = new List<Room>
-            {
-                new Room
-                {
-                    Type = "appartment",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "appartment",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                },
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                }
-            }
-        };
-        context.Hotels.Add(hotel);
-        hotel = new Hotel
-        {
-            Name = "Small hotel",
-            Country = "Hiszpania",
-            BreakfastPrice = -1.0,
-            HasWifi = true,
-            PriceForNightForPerson = 80.0,
-            Rooms = new List<Room>
-            {
-                new Room
-                {
-                    Type = "2 person",
-                    Reservations = new List<Reservation>{}
-                }
-            }
-        };
-        context.Hotels.Add(hotel);
-        context.SaveChanges();
+                    else
+                    {
+                        breakfastPrice = Math.Round(random.NextDouble() * (7.0 - 1.0) + 1.0, 2);
+                    }
+                    bool hasWifi;
+                    if (random.Next(3) == 0)
+                    {
+                        hasWifi = false;
+                    }
+                    else
+                    {
+                        hasWifi = true;
+                    }
+                    int appartments_number = random.Next(7);
+                    int casual_rooms_number = random.Next(7);
+                    var rooms = new List<Room>();
+                    for(int i=0; i < appartments_number; i++)
+                    {
+                        rooms.Add(new Room
+                        {
+                            Type = "appartment",
+                            Reservations = new List<Reservation> { }
+                        });
+                    }
+                    for (int i = 0; i < casual_rooms_number; i++)
+                    {
+                        rooms.Add(new Room
+                        {
+                            Type = "2 person",
+                            Reservations = new List<Reservation> { }
+                        });
+                    }
 
-        Console.WriteLine("Done inserting test data");
+                    var hotel = new Hotel
+                    {
+                        Name = hotelFromJson.Name,
+                        Country = hotelFromJson.Country,
+                        BreakfastPrice = breakfastPrice,
+                        HasWifi = hasWifi,
+                        PriceForNightForPerson = priceForNightForPerson,
+                        Rooms = rooms,
+                    };
+                    context.Hotels.Add(hotel);
+                }
+            }
+            context.SaveChanges();
+        }
     }
+}
+
+class HotelFromJson
+{
+    public string Name { get; set; }
+    public string Country { get; set; }
 }
