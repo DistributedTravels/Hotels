@@ -122,7 +122,7 @@ void initDB()
                         hasWifi = true;
                     }
                     int appartments_number = random.Next(7);
-                    int casual_rooms_number = random.Next(7);
+                    int casual_rooms_number = random.Next(6) + 1;
                     var rooms = new List<Room>();
                     for(int i=0; i < appartments_number; i++)
                     {
