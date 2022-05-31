@@ -35,7 +35,6 @@ namespace Hotels.Consumers
                     $"room.Id: {room.Id},\n\n"
                 );
                 Boolean able_to_reserve = false;
-                int persons_to_add = 0;
                 if (room.Type.Equals("appartment") && appartmentsAmountToFind > 0)
                 {
                     able_to_reserve = true;

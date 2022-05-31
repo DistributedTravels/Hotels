@@ -34,7 +34,7 @@ namespace Hotels.Consumers
             List<HotelItem> hotel_items = new List<HotelItem>();
             foreach (var hotel in searched_hotels)
             {
-                hotel_items.Add(new HotelItem(hotel.Id, hotel.Name, hotel.Country));
+                hotel_items.Add(new HotelItem(hotel.Id, hotel.Name, hotel.Country, hotel.BreakfastPrice, hotel.HasWifi, hotel.PriceForNightForPerson));
             }
 
             Console.WriteLine("Hotels list:");
@@ -42,7 +42,9 @@ namespace Hotels.Consumers
             {
                 Console.WriteLine($"{ hotel.HotelItemId} { hotel.HotelName} { hotel.HotelCountry }");
             }
-            await taskContext.RespondAsync<GetHotelsEventReply>(new GetHotelsEventReply(hotel_items, taskContext.Message.CorrelationId) {  HotelItems = hotel_items, CorrelationId = taskContext.Message.CorrelationId});
+            await taskContext.RespondAsync<GetHotelsEventReply>(
+                new GetHotelsEventReply(hotel_items, taskContext.Message.CorrelationId) {
+                    HotelItems = hotel_items, CorrelationId = taskContext.Message.CorrelationId});
         }
     }
 }
