@@ -26,6 +26,7 @@ builder.Services.AddMassTransit(cfg =>
     cfg.AddConsumer<GetInfoFromHotelEventConsumer>();
     cfg.AddConsumer<ReserveRoomsEventConsumer>();
     cfg.AddConsumer<UnreserveRoomsEventConsumer>();
+    cfg.AddConsumer<AddHotelEventConsumer>();
 
     // telling masstransit to use rabbitmq
     cfg.UsingRabbitMq((context, rabbitCfg) =>
