@@ -31,7 +31,9 @@ namespace Hotels.Consumers
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.HotelId == taskContext.Message.HotelId);
+                .Where(b => b.HotelId == taskContext.Message.HotelId)
+                .Where(b => !b.Hotel.Removed)
+                .Where(b => !b.Removed);
             if (taskContext.Message.Breakfast)
             {
                 searched_rooms_query = searched_rooms_query.Where(b => b.Hotel.BreakfastPrice > 0.0);

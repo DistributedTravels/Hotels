@@ -33,7 +33,9 @@ namespace Hotels.Consumers
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.HotelId == taskContext.Message.HotelId);
+                .Where(b => b.HotelId == taskContext.Message.HotelId)
+                .Where(b => !b.Hotel.Removed)
+                .Where(b => !b.Removed);
             if (taskContext.Message.Breakfast)
             {
                 searched_rooms_query = searched_rooms_query.Where(b => b.Hotel.BreakfastPrice > 0.0);
@@ -79,7 +81,10 @@ namespace Hotels.Consumers
                         UserId = taskContext.Message.UserId,
                         ReservationNumber = taskContext.Message.ReservationNumber,
                         BeginDate = taskContext.Message.BeginDate.ToUniversalTime(),
-                        EndDate = taskContext.Message.EndDate.ToUniversalTime()
+                        EndDate = taskContext.Message.EndDate.ToUniversalTime(),
+                        BreakfastRequired = taskContext.Message.Breakfast,
+                        WifiRequired = taskContext.Message.Wifi,
+                        CalculatedCost = price
                     };
                     room.Reservations.Add(added_reservation);
                 }

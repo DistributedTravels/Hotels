@@ -17,5 +17,7 @@ namespace Hotels.Database.Tables
         public double PriceForNightForPerson { get; set; }
 
         public List<Room> Rooms { get; set; }
+
+        public bool Removed { get; set; } = false;
     }
 }

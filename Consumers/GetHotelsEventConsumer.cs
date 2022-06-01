@@ -20,17 +20,13 @@ namespace Hotels.Consumers
                 $"\n\nReceived message:\n" +
                 $"Country: {taskContext.Message.Country}\n\n"
             );
-            List<Hotel> searched_hotels;
-            if (taskContext.Message.Country.Equals("any"))
+            
+            var hotels_raw = hotelContext.Hotels.Where(b => !b.Removed);
+            if (!taskContext.Message.Country.Equals("any"))
             {
-                searched_hotels = hotelContext.Hotels.ToList();
+                hotels_raw = hotels_raw.Where(b => b.Country.Equals(taskContext.Message.Country));
             }
-            else
-            {
-                searched_hotels = hotelContext.Hotels
-                .Where(b => b.Country.Equals(taskContext.Message.Country))
-                .ToList();
-            }            
+            List<Hotel> searched_hotels = hotels_raw.ToList();
             List<HotelItem> hotel_items = new List<HotelItem>();
             foreach (var hotel in searched_hotels)
             {

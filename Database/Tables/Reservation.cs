@@ -15,5 +15,8 @@ namespace Hotels.Database.Tables
         public int RoomId { get; set; }
         public Room Room { get; set; }
         
+        public bool WifiRequired { get; set; }
+        public bool BreakfastRequired { get; set; }
+        public double CalculatedCost { get; set; }
     }
 }

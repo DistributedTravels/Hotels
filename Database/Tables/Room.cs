@@ -13,5 +13,7 @@ namespace Hotels.Database.Tables
         public int HotelId { get; set; }
         public Hotel Hotel { get; set; }
         public List<Reservation> Reservations { get; set; }
+
+        public bool Removed { get; set; } = false;
     }
 }
