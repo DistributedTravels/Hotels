@@ -17,11 +17,11 @@ namespace Hotels.Consumers
 
         public async Task Consume(ConsumeContext<AddHotelEvent> taskContext)
         {
-            if (taskContext.Message.Country.Equals("any"))
+            if (taskContext.Message.Country.Equals("any") || taskContext.Message.Name.Equals("any"))
             {
                 Console.WriteLine(
                     $"\n\nnot added\n" +
-                    $"can't by \"any\" name\n\n"
+                    $"can't be \"any\" in name or country field\n\n"
                 );
                 await taskContext.RespondAsync<AddHotelEventReply>(
                 new AddHotelEventReply(AddHotelEventReply.State.NOT_ADDED, taskContext.Message.CorrelationId));
@@ -35,7 +35,7 @@ namespace Hotels.Consumers
                     $"hotel with given name already exists\n\n"
                 );
                 await taskContext.RespondAsync<AddHotelEventReply>(
-                new AddHotelEventReply(AddHotelEventReply.State.NOT_ADDED, taskContext.Message.CorrelationId));
+                    new AddHotelEventReply(AddHotelEventReply.State.NOT_ADDED, taskContext.Message.CorrelationId));
             }
             else
             {
@@ -70,7 +70,7 @@ namespace Hotels.Consumers
                 hotelContext.SaveChanges();
                 Console.WriteLine($"\n\nadded\n\n");
                 await taskContext.RespondAsync<AddHotelEventReply>(
-                new AddHotelEventReply(AddHotelEventReply.State.ADDED, taskContext.Message.CorrelationId));
+                    new AddHotelEventReply(AddHotelEventReply.State.ADDED, taskContext.Message.CorrelationId));
             }
         }
     }
