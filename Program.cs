@@ -72,19 +72,19 @@ busControl.Start();
 //        2, 2,
 //        false, true));
 
-await busControl.Publish<ReserveRoomsEvent>(
-    new ReserveRoomsEvent
-    {
-        HotelId = 93,
-        BeginDate = new DateTime(2022, 6, 12).ToUniversalTime(),
-        EndDate = new DateTime(2022, 6, 16).ToUniversalTime(),
-        AppartmentsAmount = 1,
-        CasualRoomAmount = 1,
-        UserId = Guid.Parse("11111111-0000-0000-0001-000000000001"),
-        ReservationNumber = Guid.Parse("00000000-0000-0000-0001-000000000001"),
-        Breakfast = true,
-        Wifi = true
-    });
+//await busControl.Publish<ReserveRoomsEvent>(
+//    new ReserveRoomsEvent
+//    {
+//        HotelId = 93,
+//        BeginDate = new DateTime(2022, 6, 12).ToUniversalTime(),
+//        EndDate = new DateTime(2022, 6, 16).ToUniversalTime(),
+//        AppartmentsAmount = 1,
+//        CasualRoomAmount = 1,
+//        UserId = Guid.Parse("11111111-0000-0000-0001-000000000001"),
+//        ReservationNumber = Guid.Parse("00000000-0000-0000-0001-000000000001"),
+//        Breakfast = true,
+//        Wifi = true
+//    });
 
 //await busControl.Publish<UnreserveRoomsEvent>(
 //    new UnreserveRoomsEvent(
