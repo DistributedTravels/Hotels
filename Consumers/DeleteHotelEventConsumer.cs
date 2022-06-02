@@ -50,22 +50,7 @@ namespace Hotels.Consumers
             searched_rooms_query = searched_rooms_query.Where(b => !b.Removed);
             var current_date = DateTime.Now.ToUniversalTime();
             HashSet<ResponseListDto> users_set = new HashSet<ResponseListDto>(new ResponseListDtoComparer());
-            foreach (var searched_room in searched_rooms_query.ToList())
-            {
-                searched_room.Removed = true;
-                foreach(var reservation in searched_room.Reservations)
-                {
-                    if(DateTime.Compare(reservation.BeginDate, current_date) > 0)
-                    {
-                        users_set.Add(new ResponseListDto
-                        {
-                            ReservationNumber = reservation.ReservationNumber,
-                            UserId = reservation.UserId,
-                            CalculatedCost = reservation.CalculatedCost
-                        });
-                    }
-                }
-            }
+            AdditionalFunctions.check_rooms_as_deleted(searched_rooms_query.ToList(), users_set, current_date);
             hotelContext.SaveChanges();
             Console.WriteLine("Users list:");
             foreach (var user in users_set.ToList())

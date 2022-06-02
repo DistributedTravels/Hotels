@@ -2,6 +2,7 @@
 using Models.Hotels;
 using Hotels.Database;
 using Hotels.Database.Tables;
+using Models.Hotels.Dto;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -79,6 +80,26 @@ namespace Hotels.Consumers
                 }
             }
             return -1.0;
+        }
+
+        public static void check_rooms_as_deleted(List<Room> searched_rooms, HashSet<ResponseListDto> users_set, DateTime current_date)
+        {
+            foreach (var searched_room in searched_rooms)
+            {
+                searched_room.Removed = true;
+                foreach (var reservation in searched_room.Reservations)
+                {
+                    if (DateTime.Compare(reservation.BeginDate, current_date) > 0)
+                    {
+                        users_set.Add(new ResponseListDto
+                        {
+                            ReservationNumber = reservation.ReservationNumber,
+                            UserId = reservation.UserId,
+                            CalculatedCost = reservation.CalculatedCost
+                        });
+                    }
+                }
+            }
         }
     }
 }

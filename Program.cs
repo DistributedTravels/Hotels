@@ -27,7 +27,9 @@ builder.Services.AddMassTransit(cfg =>
     cfg.AddConsumer<ReserveRoomsEventConsumer>();
     cfg.AddConsumer<UnreserveRoomsEventConsumer>();
     cfg.AddConsumer<AddHotelEventConsumer>();
+    cfg.AddConsumer<AddRoomsInHotelEventConsumer>();
     cfg.AddConsumer<DeleteHotelEventConsumer>();
+    cfg.AddConsumer<DeleteRoomsInHotelEventConsumer>();
 
     // telling masstransit to use rabbitmq
     cfg.UsingRabbitMq((context, rabbitCfg) =>
@@ -70,23 +72,23 @@ busControl.Start();
 //        2, 2,
 //        false, true));
 
-//await busControl.Publish<ReserveRoomsEvent>(
-//    new ReserveRoomsEvent
-//    {
-//        HotelId = 91,
-//        BeginDate = new DateTime(2022, 6, 10).ToUniversalTime(),
-//        EndDate = new DateTime(2022, 6, 12).ToUniversalTime(),
-//        AppartmentsAmount = 3,
-//        CasualRoomAmount = 3,
-//        UserId = Guid.Parse("00000000-0000-0000-0002-000000000001"),
-//        ReservationNumber = Guid.Parse("00000000-0000-0000-0002-000000000001"),
-//        Breakfast = true,
-//        Wifi = true
-//    });
+await busControl.Publish<ReserveRoomsEvent>(
+    new ReserveRoomsEvent
+    {
+        HotelId = 93,
+        BeginDate = new DateTime(2022, 6, 12).ToUniversalTime(),
+        EndDate = new DateTime(2022, 6, 16).ToUniversalTime(),
+        AppartmentsAmount = 1,
+        CasualRoomAmount = 1,
+        UserId = Guid.Parse("11111111-0000-0000-0001-000000000001"),
+        ReservationNumber = Guid.Parse("00000000-0000-0000-0001-000000000001"),
+        Breakfast = true,
+        Wifi = true
+    });
 
 //await busControl.Publish<UnreserveRoomsEvent>(
 //    new UnreserveRoomsEvent(
-//        new Guid(3, 2, 1, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 })));
+//        Guid.Parse("00000000-0000-0000-0001-000000000001")));
 
 //await busControl.Publish<AddHotelEvent>(
 //    new AddHotelEvent
@@ -96,14 +98,30 @@ busControl.Start();
 //        BreakfastPrice = 2.0,
 //        HasWifi = true,
 //        PriceForNightForPerson = 50.0,
-//        AppartmentsAmount = 3,
-//        CasualRoomAmount = 3
+//        AppartmentsAmount = 0,
+//        CasualRoomAmount = 0
 //    });
 
 //await busControl.Publish<DeleteHotelEvent>(
 //    new DeleteHotelEvent
 //    {
 //        Name = "abc"
+//    });
+
+//await busControl.Publish<AddRoomsInHotelEvent>(
+//    new AddRoomsInHotelEvent
+//    {
+//        HotelName = "abc",
+//        AppartmentsAmountToAdd = 2,
+//        CasualRoomAmountToAdd = 1,
+//    });
+
+//await busControl.Publish<DeleteRoomsInHotelEvent>(
+//    new DeleteRoomsInHotelEvent
+//    {
+//        HotelName = "abc",
+//        AppartmentsAmountToDelete = 1,
+//        CasualRoomAmountToDelete = 2,
 //    });
 
 busControl.Stop();
