@@ -58,8 +58,8 @@ namespace Hotels.Consumers
                 Console.WriteLine($"{user.ReservationNumber} {user.UserId} {user.CalculatedCost}");
             }
             await taskContext.RespondAsync<DeleteHotelEventReply>(
-                    new DeleteHotelEventReply(DeleteHotelEventReply.State.DELETED,
-                    users_set.ToList(), taskContext.Message.CorrelationId));
+                new DeleteHotelEventReply(DeleteHotelEventReply.State.DELETED,
+                users_set.ToList(), taskContext.Message.CorrelationId));
         }
     }
 }

@@ -18,5 +18,7 @@ namespace Hotels.Database.Tables
         public bool WifiRequired { get; set; }
         public bool BreakfastRequired { get; set; }
         public double CalculatedCost { get; set; }
+        public double PersonsNumber { get; set; }
+        public double NightsNumber { get; set; }
     }
 }

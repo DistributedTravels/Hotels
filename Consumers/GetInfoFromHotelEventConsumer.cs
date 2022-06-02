@@ -45,7 +45,7 @@ namespace Hotels.Consumers
             var searched_rooms = searched_rooms_query.ToList();
 
             var roomsToReserve = new List<Room>();
-            double price = AdditionalFunctions.checkIfRoomsAbleToReserve(
+            var results = AdditionalFunctions.checkIfRoomsAbleToReserve(
                     searched_rooms,
                     taskContext.Message.AppartmentsAmount,
                     taskContext.Message.CasualRoomAmount,
@@ -53,7 +53,7 @@ namespace Hotels.Consumers
                     taskContext.Message.BeginDate,
                     taskContext.Message.EndDate,
                     roomsToReserve);
-            if (price <= 0.0)
+            if (results.price <= 0.0)
             {
                 Console.WriteLine(
                     $"\n\nCan not reserve with these parameters\n" +
@@ -80,14 +80,14 @@ namespace Hotels.Consumers
                     $"EndDate: {taskContext.Message.EndDate},\n" +
                     $"AppartmentsAmount: {taskContext.Message.AppartmentsAmount},\n" +
                     $"CasualRoomAmount: {taskContext.Message.CasualRoomAmount},\n" +
-                    $"price: {price},\n" +
+                    $"price: {results.price},\n" +
                     $"Breakfast: {taskContext.Message.Breakfast},\n" +
                     $"Internet: {taskContext.Message.Wifi}\n\n"
                 );
                 await taskContext.RespondAsync<GetInfoFromHotelEventReply>(
                     new GetInfoFromHotelEventReply(
                         GetInfoFromHotelEventReply.State.CAN_BE_RESERVED,
-                        price,
+                        results.price,
                         taskContext.Message.CorrelationId));
             }
         }

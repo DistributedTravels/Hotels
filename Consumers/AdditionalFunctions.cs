@@ -8,9 +8,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hotels.Consumers
 {
+    public class Returned_values
+    {
+        public double price { get; set; }
+        public int num_of_persons { get; set; }
+        public int num_of_nights { get; set; }
+    }
+
     public class AdditionalFunctions
     {
-        public static double checkIfRoomsAbleToReserve(List<Room> searched_rooms,
+        public static Returned_values checkIfRoomsAbleToReserve(List<Room> searched_rooms,
             int appartmentsAmountToFind, int casualRoomAmountToFind,
             bool breakfastChecked,
             DateTime beginDate, DateTime endDate,
@@ -70,16 +77,26 @@ namespace Hotels.Consumers
                     if (able_to_reserve)
                     {
                         casualRoomAmountToFind--;
-                        persons_counter += 4;
+                        persons_counter += 2;
                         roomsToReserve.Add(room);
                     }
                 }
                 if (appartmentsAmountToFind <= 0 && casualRoomAmountToFind <= 0)
                 {
-                    return price * persons_counter * numOfNights;
+                    return new Returned_values
+                    {
+                        price = price * persons_counter * numOfNights,
+                        num_of_persons = persons_counter,
+                        num_of_nights = numOfNights
+                    };
                 }
             }
-            return -1.0;
+            return new Returned_values
+            {
+                price = -1.0,
+                num_of_persons = 0,
+                num_of_nights = 0
+            };
         }
 
         public static void check_rooms_as_deleted(List<Room> searched_rooms, HashSet<ResponseListDto> users_set, DateTime current_date)
