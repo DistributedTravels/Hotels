@@ -32,6 +32,8 @@ builder.Services.AddMassTransit(cfg =>
     cfg.AddConsumer<DeleteRoomsInHotelEventConsumer>();
     cfg.AddConsumer<ChangeBasePriceEventConsumer>();
     cfg.AddConsumer<ChangeBreakfastPriceEventConsumer>();
+    cfg.AddConsumer<ChangeWifiAvailabilityEventConsumer>();
+    cfg.AddConsumer<ChangeNamesEventConsumer>();
 
     // telling masstransit to use rabbitmq
     cfg.UsingRabbitMq((context, rabbitCfg) =>
@@ -78,13 +80,13 @@ busControl.Start();
 //    new ReserveRoomsEvent
 //    {
 //        HotelId = 91,
-//        BeginDate = new DateTime(2022, 5, 12).ToUniversalTime(),
-//        EndDate = new DateTime(2022, 5, 16).ToUniversalTime(),
+//        BeginDate = new DateTime(2022, 6, 12).ToUniversalTime(),
+//        EndDate = new DateTime(2022, 6, 16).ToUniversalTime(),
 //        AppartmentsAmount = 1,
 //        CasualRoomAmount = 1,
 //        UserId = Guid.Parse("11111111-0000-0000-0001-000000000002"),
-//        ReservationNumber = Guid.Parse("00000000-0000-0000-0001-000000000002"),
-//        Breakfast = true,
+//        ReservationNumber = Guid.Parse("00000000-0000-0000-0001-000000000005"),
+//        Breakfast = false,
 //        Wifi = true
 //    });
 
@@ -133,12 +135,28 @@ busControl.Start();
 //        NewPrice = 48.0
 //    });
 
-await busControl.Publish<ChangeBreakfastPriceEvent>(
-    new ChangeBreakfastPriceEvent
-    {
-        HotelName = "abc",
-        NewPrice = -1.0
-    });
+//await busControl.Publish<ChangeBreakfastPriceEvent>(
+//    new ChangeBreakfastPriceEvent
+//    {
+//        HotelName = "abc",
+//        NewPrice = -1.0
+//    });
+
+//await busControl.Publish<ChangeWifiAvailabilityEvent>(
+//    new ChangeWifiAvailabilityEvent
+//    {
+//        HotelName = "abc",
+//        Wifi = true
+//    });
+
+//await busControl.Publish<ChangeNamesEvent>(
+//    new ChangeNamesEvent
+//    {
+//        ChangedParameter = "name",
+//        OldName = "abc",
+//        NewName = "def",
+//        NewCountry = "wololo"
+//    });
 
 busControl.Stop();
 

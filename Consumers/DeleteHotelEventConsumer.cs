@@ -33,10 +33,21 @@ namespace Hotels.Consumers
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.Hotel.Name == taskContext.Message.Name)
+                .Where(b => b.Hotel.Name.Equals(taskContext.Message.Name))
                 .Where(b => !b.Hotel.Removed);
             if (!searched_rooms_query.ToList().Any())
             {
+                if(hotelContext.Hotels.Where(b => b.Name.Equals(taskContext.Message.Name)).Any())
+                {
+                    hotelContext.Hotels.Where(b => b.Name.Equals(taskContext.Message.Name)).First().Removed = true;
+                    Console.WriteLine(
+                        $"\n\nHotel removed\n\n"
+                    );
+                    await taskContext.RespondAsync<DeleteHotelEventReply>(
+                        new DeleteHotelEventReply(DeleteHotelEventReply.State.DELETED,
+                        new List<ResponseListDto>(), taskContext.Message.CorrelationId));
+                    return;
+                }
                 Console.WriteLine(
                     $"\n\nHotel is already removed\n\n"
                 );

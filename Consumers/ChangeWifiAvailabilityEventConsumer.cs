@@ -8,15 +8,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hotels.Consumers
 {
-    public class ChangeBasePriceEventConsumer : IConsumer<ChangeBasePriceEvent>
+    public class ChangeWifiAvailabilityEventConsumer : IConsumer<ChangeWifiAvailabilityEvent>
     {
         private readonly HotelContext hotelContext;
-        public ChangeBasePriceEventConsumer(HotelContext hotelContext)
+        public ChangeWifiAvailabilityEventConsumer(HotelContext hotelContext)
         {
             this.hotelContext = hotelContext;
         }
 
-        public async Task Consume(ConsumeContext<ChangeBasePriceEvent> taskContext)
+        public async Task Consume(ConsumeContext<ChangeWifiAvailabilityEvent> taskContext)
         {
             if (taskContext.Message.HotelName.Equals("any"))
             {
@@ -24,19 +24,8 @@ namespace Hotels.Consumers
                     $"\n\nnot changed\n" +
                     $"can't be \"any\" in hotel name field\n\n"
                 );
-                await taskContext.RespondAsync<ChangeBasePriceEventReply>(
-                    new ChangeBasePriceEventReply(ChangeBasePriceEventReply.State.NOT_CHANGED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
-                return;
-            }
-            if (taskContext.Message.NewPrice <= 0.0)
-            {
-                Console.WriteLine(
-                    $"\n\nnot changed\n" +
-                    $"can't be value below 0 as new price\n\n"
-                );
-                await taskContext.RespondAsync<ChangeBasePriceEventReply>(
-                    new ChangeBasePriceEventReply(ChangeBasePriceEventReply.State.NOT_CHANGED,
+                await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
+                    new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_UNCHANGED,
                     new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
@@ -44,8 +33,7 @@ namespace Hotels.Consumers
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
                 .Where(b => b.Hotel.Name.Equals(taskContext.Message.HotelName))
-                .Where(b => !b.Hotel.Removed)
-                .Where(b => !b.Removed);
+                .Where(b => !b.Hotel.Removed);
             Hotel searched_hotel;
             if (!searched_rooms_query.ToList().Any())
             {
@@ -55,10 +43,11 @@ namespace Hotels.Consumers
                 if (!searched_hotels.Any())
                 {
                     Console.WriteLine(
-                        $"\n\nHotel is already removed or rooms uncorrect\n\n"
+                        $"\n\nnot changed\n" +
+                        $"Hotel is already removed\n\n"
                     );
-                    await taskContext.RespondAsync<ChangeBasePriceEventReply>(
-                        new ChangeBasePriceEventReply(ChangeBasePriceEventReply.State.NOT_CHANGED,
+                    await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
+                        new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_UNCHANGED,
                         new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                     return;
                 }
@@ -68,35 +57,56 @@ namespace Hotels.Consumers
             {
                 searched_hotel = searched_rooms_query.First().Hotel;
             }
-            var price_difference = taskContext.Message.NewPrice - searched_hotel.PriceForNightForPerson;
+            if (!searched_hotel.HasWifi && !taskContext.Message.Wifi || searched_hotel.HasWifi && taskContext.Message.Wifi)
+            {
+                Console.WriteLine(
+                    $"\n\nwifi availability not changed\n\n"
+                );
+                await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
+                    new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_UNCHANGED,
+                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
+                return;
+            }
+            if (!searched_hotel.HasWifi && taskContext.Message.Wifi)
+            {
+                searched_hotel.HasWifi = taskContext.Message.Wifi;
+                hotelContext.SaveChanges();
+                Console.WriteLine(
+                    $"\n\nwifi set\n\n"
+                );
+                await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
+                    new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_SET,
+                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
+                return;
+            }
+            searched_hotel.HasWifi = taskContext.Message.Wifi;
+            searched_rooms_query = searched_rooms_query.Where(b => !b.Removed);
             var current_date = DateTime.Now.ToUniversalTime();
             HashSet<ResponseListDto> users_set = new HashSet<ResponseListDto>(new ResponseListDtoComparer());
             foreach (var searched_room in searched_rooms_query.ToList())
             {
                 foreach (var reservation in searched_room.Reservations)
                 {
-                    if (DateTime.Compare(reservation.BeginDate, current_date) > 0)
+                    if (DateTime.Compare(reservation.BeginDate, current_date) > 0 && reservation.WifiRequired)
                     {
-                        var total_price_difference = price_difference * reservation.NightsNumber * reservation.PersonsNumber;
                         users_set.Add(new ResponseListDto
                         {
                             ReservationNumber = reservation.ReservationNumber,
                             UserId = reservation.UserId,
-                            CalculatedCost = total_price_difference
+                            CalculatedCost = reservation.CalculatedCost
                         });
-                        reservation.CalculatedCost += total_price_difference;
+                        reservation.WifiRequired = false;
                     }
                 }
             }
-            searched_hotel.PriceForNightForPerson = taskContext.Message.NewPrice;
             hotelContext.SaveChanges();
             Console.WriteLine("Users list:");
             foreach (var user in users_set.ToList())
             {
                 Console.WriteLine($"{user.ReservationNumber} {user.UserId} {user.CalculatedCost}");
             }
-            await taskContext.RespondAsync<ChangeBasePriceEventReply>(
-                new ChangeBasePriceEventReply(ChangeBasePriceEventReply.State.CHANGED,
+            await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
+                new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_UNSET,
                 users_set.ToList(), taskContext.Message.CorrelationId));
         }
     }

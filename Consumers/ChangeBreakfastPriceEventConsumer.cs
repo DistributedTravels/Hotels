@@ -32,20 +32,32 @@ namespace Hotels.Consumers
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.Hotel.Name == taskContext.Message.HotelName)
+                .Where(b => b.Hotel.Name.Equals(taskContext.Message.HotelName))
                 .Where(b => !b.Hotel.Removed)
                 .Where(b => !b.Removed);
+            Hotel searched_hotel;
             if (!searched_rooms_query.ToList().Any())
             {
-                Console.WriteLine(
-                    $"\n\nHotel is already removed or rooms uncorrect\n\n"
-                );
-                await taskContext.RespondAsync<ChangeBreakfastPriceEventReply>(
-                    new ChangeBreakfastPriceEventReply(ChangeBreakfastPriceEventReply.State.PRICE_NOT_CHANGED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
-                return;
+                var searched_hotels = hotelContext.Hotels
+                    .Where(b => b.Name.Equals(taskContext.Message.HotelName))
+                    .Where(b => !b.Removed);
+                if (!searched_hotels.Any())
+                {
+                    Console.WriteLine(
+                        $"\n\nHotel is already removed or rooms uncorrect\n\n"
+                    );
+                    await taskContext.RespondAsync<ChangeBreakfastPriceEventReply>(
+                        new ChangeBreakfastPriceEventReply(ChangeBreakfastPriceEventReply.State.PRICE_NOT_CHANGED,
+                        new List<ResponseListDto>(), taskContext.Message.CorrelationId));
+                    return;
+                }
+                searched_hotel = searched_hotels.First();
             }
-            if (searched_rooms_query.First().Hotel.BreakfastPrice < 0.0 && taskContext.Message.NewPrice < 0.0)
+            else
+            {
+                searched_hotel = searched_rooms_query.First().Hotel;
+            }
+            if (searched_hotel.BreakfastPrice < 0.0 && taskContext.Message.NewPrice < 0.0)
             {
                 Console.WriteLine(
                     $"\n\nnot changed\n" +
@@ -56,9 +68,9 @@ namespace Hotels.Consumers
                     new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
-            if (searched_rooms_query.First().Hotel.BreakfastPrice < 0.0 && taskContext.Message.NewPrice >= 0.0)
+            if (searched_hotel.BreakfastPrice < 0.0 && taskContext.Message.NewPrice >= 0.0)
             {
-                searched_rooms_query.First().Hotel.BreakfastPrice = taskContext.Message.NewPrice;
+                searched_hotel.BreakfastPrice = taskContext.Message.NewPrice;
                 hotelContext.SaveChanges();
                 Console.WriteLine(
                     $"\n\nPrice of breakfast set\n\n"
@@ -105,8 +117,8 @@ namespace Hotels.Consumers
                     }
                 }
             }
-            if (taskContext.Message.NewPrice >= 0) { searched_rooms_query.First().Hotel.BreakfastPrice = taskContext.Message.NewPrice; }
-            else { searched_rooms_query.First().Hotel.BreakfastPrice = -1.0; }
+            if (taskContext.Message.NewPrice >= 0) { searched_hotel.BreakfastPrice = taskContext.Message.NewPrice; }
+            else { searched_hotel.BreakfastPrice = -1.0; }
             hotelContext.SaveChanges();
             Console.WriteLine("Users list:");
             foreach (var user in users_set.ToList())

@@ -22,7 +22,7 @@ namespace Hotels.Consumers
                 $"ReservationNumber: {taskContext.Message.ReservationNumber},\n\n"
             );
             var searched_reservations = hotelContext.Reservations
-                .Where(b => b.ReservationNumber == taskContext.Message.ReservationNumber);
+                .Where(b => b.ReservationNumber.Equals(taskContext.Message.ReservationNumber));
             foreach (var reservation in searched_reservations)
             {
                 hotelContext.Reservations.Remove(reservation);
