@@ -11,12 +11,14 @@ namespace Hotels.Consumers
     public class Returned_values
     {
         public double price { get; set; }
-        public int num_of_persons { get; set; }
         public int num_of_nights { get; set; }
     }
 
     public class AdditionalFunctions
     {
+        public static readonly int persons_in_appartment = 4;
+        public static readonly int persons_in_casual_room = 2;
+        
         public static Returned_values checkIfRoomsAbleToReserve(List<Room> searched_rooms,
             int appartmentsAmountToFind, int casualRoomAmountToFind,
             bool breakfastChecked,
@@ -58,7 +60,7 @@ namespace Hotels.Consumers
                     if (able_to_reserve)
                     {
                         appartmentsAmountToFind--;
-                        persons_counter += 4;
+                        persons_counter += persons_in_appartment;
                         roomsToReserve.Add(room);
                     }
                 }
@@ -77,7 +79,7 @@ namespace Hotels.Consumers
                     if (able_to_reserve)
                     {
                         casualRoomAmountToFind--;
-                        persons_counter += 2;
+                        persons_counter += persons_in_casual_room;
                         roomsToReserve.Add(room);
                     }
                 }
@@ -86,7 +88,6 @@ namespace Hotels.Consumers
                     return new Returned_values
                     {
                         price = price * persons_counter * numOfNights,
-                        num_of_persons = persons_counter,
                         num_of_nights = numOfNights
                     };
                 }
@@ -94,7 +95,6 @@ namespace Hotels.Consumers
             return new Returned_values
             {
                 price = -1.0,
-                num_of_persons = 0,
                 num_of_nights = 0
             };
         }
@@ -112,7 +112,9 @@ namespace Hotels.Consumers
                         {
                             ReservationNumber = reservation.ReservationNumber,
                             UserId = reservation.UserId,
-                            CalculatedCost = reservation.CalculatedCost
+                            CalculatedCost = reservation.CalculatedCost,
+                            AppartmentsAmount = reservation.AppartmentsNumber,
+                            CasualRoomsAmount = reservation.CasualRoomsNumber
                         });
                     }
                 }

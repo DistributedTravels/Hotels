@@ -3,6 +3,7 @@ using Models.Hotels;
 using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
+using Models.Reservations;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -24,9 +25,6 @@ namespace Hotels.Consumers
                     $"\n\nnot changed\n" +
                     $"can't be \"any\" in hotel name field\n\n"
                 );
-                await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
-                    new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_UNCHANGED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             var searched_rooms_query = hotelContext.Rooms
@@ -46,9 +44,6 @@ namespace Hotels.Consumers
                         $"\n\nnot changed\n" +
                         $"Hotel is already removed\n\n"
                     );
-                    await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
-                        new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_UNCHANGED,
-                        new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                     return;
                 }
                 searched_hotel = searched_hotels.First();
@@ -62,9 +57,6 @@ namespace Hotels.Consumers
                 Console.WriteLine(
                     $"\n\nwifi availability not changed\n\n"
                 );
-                await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
-                    new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_UNCHANGED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             if (!searched_hotel.HasWifi && taskContext.Message.Wifi)
@@ -74,9 +66,6 @@ namespace Hotels.Consumers
                 Console.WriteLine(
                     $"\n\nwifi set\n\n"
                 );
-                await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
-                    new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_SET,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             searched_hotel.HasWifi = taskContext.Message.Wifi;
@@ -93,7 +82,9 @@ namespace Hotels.Consumers
                         {
                             ReservationNumber = reservation.ReservationNumber,
                             UserId = reservation.UserId,
-                            CalculatedCost = reservation.CalculatedCost
+                            CalculatedCost = reservation.CalculatedCost,
+                            AppartmentsAmount = reservation.AppartmentsNumber,
+                            CasualRoomsAmount = reservation.CasualRoomsNumber
                         });
                         reservation.WifiRequired = false;
                     }
@@ -104,10 +95,25 @@ namespace Hotels.Consumers
             foreach (var user in users_set.ToList())
             {
                 Console.WriteLine($"{user.ReservationNumber} {user.UserId} {user.CalculatedCost}");
+                await taskContext.RespondAsync<ChangesInReservationsEvent>(
+                    new ChangesInReservationsEvent
+                    {
+                        ReservationId = user.ReservationNumber,
+                        ChangesInHotel = new HotelChange
+                        {
+                            HotelId = searched_hotel.Id,
+                            HotelName = searched_hotel.Name,
+                            ChangeInHotelPrice = user.CalculatedCost,
+                            WifiAvailable = searched_hotel.HasWifi,
+                            BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                            HotelAvailable = true,
+                            BigRoomNumberChange = user.AppartmentsAmount,
+                            SmallRoomNumberChange = user.CasualRoomsAmount
+                        },
+                        ChangesInTransport = new TransportChange { TransportId = -1 },
+                        ReservationAvailable = true
+                    });
             }
-            await taskContext.RespondAsync<ChangeWifiAvailabilityEventReply>(
-                new ChangeWifiAvailabilityEventReply(ChangeWifiAvailabilityEventReply.State.WIFI_UNSET,
-                users_set.ToList(), taskContext.Message.CorrelationId));
         }
     }
 }

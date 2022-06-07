@@ -23,8 +23,6 @@ namespace Hotels.Consumers
                     $"\n\nnot added\n" +
                     $"can't be \"any\" in hotel name field\n\n"
                 );
-                await taskContext.RespondAsync<AddRoomsInHotelEventReply>(
-                    new AddRoomsInHotelEventReply(AddRoomsInHotelEventReply.State.NOT_ADDED, taskContext.Message.CorrelationId));
                 return;
             }
             var searched_hotels = hotelContext.Hotels
@@ -37,8 +35,6 @@ namespace Hotels.Consumers
                     $"\n\nnot added\n" +
                     $"hotel with this name does not exist\n\n"
                 );
-                await taskContext.RespondAsync<AddRoomsInHotelEventReply>(
-                    new AddRoomsInHotelEventReply(AddRoomsInHotelEventReply.State.NOT_ADDED, taskContext.Message.CorrelationId));
                 return;
             }
             var searched_hotel = searched_hotels[0];
@@ -62,10 +58,8 @@ namespace Hotels.Consumers
                     Reservations = new List<Reservation> { }
                 });
             }
-            hotelContext.SaveChanges();
+            await hotelContext.SaveChangesAsync();
             Console.WriteLine($"\n\nadded\n\n");
-            await taskContext.RespondAsync<AddRoomsInHotelEventReply>(
-                    new AddRoomsInHotelEventReply(AddRoomsInHotelEventReply.State.ADDED, taskContext.Message.CorrelationId));
         }
     }
 }

@@ -85,7 +85,8 @@ namespace Hotels.Consumers
                         BreakfastRequired = taskContext.Message.Breakfast,
                         WifiRequired = taskContext.Message.Wifi,
                         CalculatedCost = results.price,
-                        PersonsNumber = results.num_of_persons,
+                        AppartmentsNumber = taskContext.Message.AppartmentsAmount,
+                        CasualRoomsNumber = taskContext.Message.CasualRoomAmount,
                         NightsNumber = results.num_of_nights
                     };
                     room.Reservations.Add(added_reservation);

@@ -3,6 +3,7 @@ using Models.Hotels;
 using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
+using Models.Reservations;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -24,9 +25,6 @@ namespace Hotels.Consumers
                     $"\n\nnot changed\n" +
                     $"can't be \"any\" in hotel name field\n\n"
                 );
-                await taskContext.RespondAsync<ChangeBreakfastPriceEventReply>(
-                    new ChangeBreakfastPriceEventReply(ChangeBreakfastPriceEventReply.State.PRICE_NOT_CHANGED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             var searched_rooms_query = hotelContext.Rooms
@@ -46,9 +44,6 @@ namespace Hotels.Consumers
                     Console.WriteLine(
                         $"\n\nHotel is already removed or rooms uncorrect\n\n"
                     );
-                    await taskContext.RespondAsync<ChangeBreakfastPriceEventReply>(
-                        new ChangeBreakfastPriceEventReply(ChangeBreakfastPriceEventReply.State.PRICE_NOT_CHANGED,
-                        new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                     return;
                 }
                 searched_hotel = searched_hotels.First();
@@ -63,9 +58,6 @@ namespace Hotels.Consumers
                     $"\n\nnot changed\n" +
                     $"breakfast is still unavailable\n\n"
                 );
-                await taskContext.RespondAsync<ChangeBreakfastPriceEventReply>(
-                    new ChangeBreakfastPriceEventReply(ChangeBreakfastPriceEventReply.State.PRICE_NOT_CHANGED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             if (searched_hotel.BreakfastPrice < 0.0 && taskContext.Message.NewPrice >= 0.0)
@@ -75,19 +67,7 @@ namespace Hotels.Consumers
                 Console.WriteLine(
                     $"\n\nPrice of breakfast set\n\n"
                 );
-                await taskContext.RespondAsync<ChangeBreakfastPriceEventReply>(
-                    new ChangeBreakfastPriceEventReply(ChangeBreakfastPriceEventReply.State.BREAKFAST_BECOME_AVAILABLE,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
-            }
-            ChangeBreakfastPriceEventReply.State answer;
-            if (taskContext.Message.NewPrice >= 0.0)
-            {
-                answer = ChangeBreakfastPriceEventReply.State.PRICE_CHANGED;
-            }
-            else
-            {
-                answer = ChangeBreakfastPriceEventReply.State.BREAKFAST_NO_MORE_AVAILABLE;
             }
             var current_date = DateTime.Now.ToUniversalTime();
             HashSet<ResponseListDto> users_set = new HashSet<ResponseListDto>(new ResponseListDtoComparer());
@@ -100,20 +80,26 @@ namespace Hotels.Consumers
                         double total_price_difference;
                         if (taskContext.Message.NewPrice>=0.0)
                         {
-                            total_price_difference = (taskContext.Message.NewPrice - searched_room.Hotel.BreakfastPrice) * reservation.NightsNumber * reservation.PersonsNumber;
+                            total_price_difference = (taskContext.Message.NewPrice - searched_room.Hotel.BreakfastPrice) * reservation.NightsNumber *
+                                (reservation.AppartmentsNumber * AdditionalFunctions.persons_in_appartment +
+                                reservation.CasualRoomsNumber * AdditionalFunctions.persons_in_casual_room);
                         }
                         else
                         {
-                            total_price_difference = ( - searched_room.Hotel.BreakfastPrice) * reservation.NightsNumber * reservation.PersonsNumber;
+                            total_price_difference = ( - searched_room.Hotel.BreakfastPrice) * reservation.NightsNumber *
+                                (reservation.AppartmentsNumber * AdditionalFunctions.persons_in_appartment +
+                                reservation.CasualRoomsNumber * AdditionalFunctions.persons_in_casual_room);
                             reservation.BreakfastRequired = false;
                         }
+                        reservation.CalculatedCost += total_price_difference;
                         users_set.Add(new ResponseListDto
                         {
                             ReservationNumber = reservation.ReservationNumber,
                             UserId = reservation.UserId,
-                            CalculatedCost = total_price_difference
+                            CalculatedCost = reservation.CalculatedCost,
+                            AppartmentsAmount = reservation.AppartmentsNumber,
+                            CasualRoomsAmount = reservation.CasualRoomsNumber
                         });
-                        reservation.CalculatedCost += total_price_difference;
                     }
                 }
             }
@@ -124,10 +110,25 @@ namespace Hotels.Consumers
             foreach (var user in users_set.ToList())
             {
                 Console.WriteLine($"{user.ReservationNumber} {user.UserId} {user.CalculatedCost}");
+                await taskContext.RespondAsync<ChangesInReservationsEvent>(
+                    new ChangesInReservationsEvent
+                    {
+                        ReservationId = user.ReservationNumber,
+                        ChangesInHotel = new HotelChange
+                        {
+                            HotelId = searched_hotel.Id,
+                            HotelName = searched_hotel.Name,
+                            ChangeInHotelPrice = user.CalculatedCost,
+                            WifiAvailable = searched_hotel.HasWifi,
+                            BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                            HotelAvailable = true,
+                            BigRoomNumberChange = user.AppartmentsAmount,
+                            SmallRoomNumberChange = user.CasualRoomsAmount
+                        },
+                        ChangesInTransport = new TransportChange { TransportId = -1 },
+                        ReservationAvailable = true
+                    });
             }
-            await taskContext.RespondAsync<ChangeBreakfastPriceEventReply>(
-                new ChangeBreakfastPriceEventReply(answer,
-                users_set.ToList(), taskContext.Message.CorrelationId));
         }
     }
 }

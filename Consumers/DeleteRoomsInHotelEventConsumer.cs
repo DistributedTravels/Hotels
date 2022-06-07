@@ -3,6 +3,7 @@ using Models.Hotels;
 using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
+using Models.Reservations;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -24,9 +25,6 @@ namespace Hotels.Consumers
                     $"\n\nnot deleted\n" +
                     $"can't be \"any\" in hotel name field\n\n"
                 );
-                await taskContext.RespondAsync<DeleteRoomsInHotelEventReply>(
-                    new DeleteRoomsInHotelEventReply(DeleteRoomsInHotelEventReply.State.NOT_DELETED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             var searched_rooms_query = hotelContext.Rooms
@@ -39,9 +37,6 @@ namespace Hotels.Consumers
                 Console.WriteLine(
                     $"\n\nHotel is already removed\n\n"
                 );
-                await taskContext.RespondAsync<DeleteRoomsInHotelEventReply>(
-                    new DeleteRoomsInHotelEventReply(DeleteRoomsInHotelEventReply.State.NOT_DELETED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             var searched_rooms = searched_rooms_query.Where(b => !b.Removed);
@@ -53,9 +48,6 @@ namespace Hotels.Consumers
                     $"\n\nnot deleted\n" +
                     $"too many appartments to remove\n\n"
                 );
-                await taskContext.RespondAsync<DeleteRoomsInHotelEventReply>(
-                    new DeleteRoomsInHotelEventReply(DeleteRoomsInHotelEventReply.State.NOT_DELETED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             if (searched_casual_rooms.Count < taskContext.Message.CasualRoomAmountToDelete)
@@ -64,9 +56,6 @@ namespace Hotels.Consumers
                     $"\n\nnot deleted\n" +
                     $"too many casual rooms to remove\n\n"
                 );
-                await taskContext.RespondAsync<DeleteRoomsInHotelEventReply>(
-                    new DeleteRoomsInHotelEventReply(DeleteRoomsInHotelEventReply.State.NOT_DELETED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             var current_date = DateTime.Now.ToUniversalTime();
@@ -78,10 +67,25 @@ namespace Hotels.Consumers
             foreach (var user in users_set.ToList())
             {
                 Console.WriteLine($"{user.ReservationNumber} {user.UserId} {user.CalculatedCost}");
+                await taskContext.RespondAsync<ChangesInReservationsEvent>(
+                    new ChangesInReservationsEvent
+                    {
+                        ReservationId = user.ReservationNumber,
+                        ChangesInHotel = new HotelChange
+                        {
+                            HotelId = searched_rooms_query.First().Hotel.Id,
+                            HotelName = searched_rooms_query.First().Hotel.Name,
+                            ChangeInHotelPrice = user.CalculatedCost,
+                            WifiAvailable = searched_rooms_query.First().Hotel.HasWifi,
+                            BreakfastAvailable = (searched_rooms_query.First().Hotel.BreakfastPrice >= 0.0 ? true : false),
+                            HotelAvailable = true,
+                            BigRoomNumberChange = user.AppartmentsAmount,
+                            SmallRoomNumberChange = user.CasualRoomsAmount
+                        },
+                        ChangesInTransport = new TransportChange { TransportId = -1 },
+                        ReservationAvailable = false
+                    });
             }
-            await taskContext.RespondAsync<DeleteRoomsInHotelEventReply>(
-                new DeleteRoomsInHotelEventReply(DeleteRoomsInHotelEventReply.State.DELETED,
-                users_set.ToList(), taskContext.Message.CorrelationId));
         }
     }
 }

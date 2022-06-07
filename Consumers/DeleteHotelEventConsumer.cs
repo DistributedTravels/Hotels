@@ -3,6 +3,7 @@ using Models.Hotels;
 using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
+using Models.Reservations;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -40,20 +41,13 @@ namespace Hotels.Consumers
                 if(hotelContext.Hotels.Where(b => b.Name.Equals(taskContext.Message.Name)).Any())
                 {
                     hotelContext.Hotels.Where(b => b.Name.Equals(taskContext.Message.Name)).First().Removed = true;
+                    hotelContext.SaveChanges();
                     Console.WriteLine(
                         $"\n\nHotel removed\n\n"
                     );
-                    await taskContext.RespondAsync<DeleteHotelEventReply>(
-                        new DeleteHotelEventReply(DeleteHotelEventReply.State.DELETED,
-                        new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                     return;
                 }
-                Console.WriteLine(
-                    $"\n\nHotel is already removed\n\n"
-                );
-                await taskContext.RespondAsync<DeleteHotelEventReply>(
-                    new DeleteHotelEventReply(DeleteHotelEventReply.State.NOT_DELETED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
+                Console.WriteLine($"\n\nHotel is already removed\n\n");
                 return;
             }
 
@@ -67,10 +61,25 @@ namespace Hotels.Consumers
             foreach (var user in users_set.ToList())
             {
                 Console.WriteLine($"{user.ReservationNumber} {user.UserId} {user.CalculatedCost}");
+                await taskContext.RespondAsync<ChangesInReservationsEvent>(
+                    new ChangesInReservationsEvent
+                    {
+                        ReservationId = user.ReservationNumber,
+                        ChangesInHotel = new HotelChange
+                        {
+                            HotelId = searched_rooms_query.First().Hotel.Id,
+                            HotelName = searched_rooms_query.First().Hotel.Name,
+                            ChangeInHotelPrice = user.CalculatedCost,
+                            WifiAvailable = searched_rooms_query.First().Hotel.HasWifi,
+                            BreakfastAvailable = (searched_rooms_query.First().Hotel.BreakfastPrice >= 0.0 ? true : false),
+                            HotelAvailable = false,
+                            BigRoomNumberChange = user.AppartmentsAmount,
+                            SmallRoomNumberChange = user.CasualRoomsAmount
+                        },
+                        ChangesInTransport = new TransportChange { TransportId = -1 },
+                        ReservationAvailable = false
+                    });
             }
-            await taskContext.RespondAsync<DeleteHotelEventReply>(
-                new DeleteHotelEventReply(DeleteHotelEventReply.State.DELETED,
-                users_set.ToList(), taskContext.Message.CorrelationId));
         }
     }
 }

@@ -3,6 +3,7 @@ using Models.Hotels;
 using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
+using Models.Reservations;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -24,9 +25,6 @@ namespace Hotels.Consumers
                     $"\n\nnot changed\n" +
                     $"can't be \"any\" in hotel name field\n\n"
                 );
-                await taskContext.RespondAsync<ChangeBasePriceEventReply>(
-                    new ChangeBasePriceEventReply(ChangeBasePriceEventReply.State.NOT_CHANGED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             if (taskContext.Message.NewPrice <= 0.0)
@@ -35,9 +33,6 @@ namespace Hotels.Consumers
                     $"\n\nnot changed\n" +
                     $"can't be value below 0 as new price\n\n"
                 );
-                await taskContext.RespondAsync<ChangeBasePriceEventReply>(
-                    new ChangeBasePriceEventReply(ChangeBasePriceEventReply.State.NOT_CHANGED,
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             var searched_rooms_query = hotelContext.Rooms
@@ -57,9 +52,6 @@ namespace Hotels.Consumers
                     Console.WriteLine(
                         $"\n\nHotel is already removed or rooms uncorrect\n\n"
                     );
-                    await taskContext.RespondAsync<ChangeBasePriceEventReply>(
-                        new ChangeBasePriceEventReply(ChangeBasePriceEventReply.State.NOT_CHANGED,
-                        new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                     return;
                 }
                 searched_hotel = searched_hotels.First();
@@ -77,14 +69,18 @@ namespace Hotels.Consumers
                 {
                     if (DateTime.Compare(reservation.BeginDate, current_date) > 0)
                     {
-                        var total_price_difference = price_difference * reservation.NightsNumber * reservation.PersonsNumber;
+                        var total_price_difference = price_difference * reservation.NightsNumber * 
+                            (reservation.AppartmentsNumber * AdditionalFunctions.persons_in_appartment + 
+                            reservation.CasualRoomsNumber * AdditionalFunctions.persons_in_casual_room);
+                        reservation.CalculatedCost += total_price_difference;
                         users_set.Add(new ResponseListDto
                         {
                             ReservationNumber = reservation.ReservationNumber,
                             UserId = reservation.UserId,
-                            CalculatedCost = total_price_difference
+                            CalculatedCost = reservation.CalculatedCost,
+                            AppartmentsAmount = reservation.AppartmentsNumber,
+                            CasualRoomsAmount = reservation.CasualRoomsNumber
                         });
-                        reservation.CalculatedCost += total_price_difference;
                     }
                 }
             }
@@ -94,10 +90,25 @@ namespace Hotels.Consumers
             foreach (var user in users_set.ToList())
             {
                 Console.WriteLine($"{user.ReservationNumber} {user.UserId} {user.CalculatedCost}");
+                await taskContext.RespondAsync<ChangesInReservationsEvent>(
+                    new ChangesInReservationsEvent
+                    {
+                        ReservationId = user.ReservationNumber,
+                        ChangesInHotel = new HotelChange
+                        {
+                            HotelId = searched_hotel.Id,
+                            HotelName = searched_hotel.Name,
+                            ChangeInHotelPrice = user.CalculatedCost,
+                            WifiAvailable = searched_hotel.HasWifi,
+                            BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                            HotelAvailable = true,
+                            BigRoomNumberChange = user.AppartmentsAmount,
+                            SmallRoomNumberChange = user.CasualRoomsAmount
+                        },
+                        ChangesInTransport = new TransportChange { TransportId = -1 },
+                        ReservationAvailable = true
+                    });
             }
-            await taskContext.RespondAsync<ChangeBasePriceEventReply>(
-                new ChangeBasePriceEventReply(ChangeBasePriceEventReply.State.CHANGED,
-                users_set.ToList(), taskContext.Message.CorrelationId));
         }
     }
 }
