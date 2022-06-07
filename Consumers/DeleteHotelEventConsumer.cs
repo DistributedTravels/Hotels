@@ -25,9 +25,6 @@ namespace Hotels.Consumers
                     $"\n\nnot deleted\n" +
                     $"can't be \"any\" in name field\n\n"
                 );
-                await taskContext.RespondAsync<DeleteHotelEventReply>(
-                    new DeleteHotelEventReply(DeleteHotelEventReply.State.NOT_DELETED, 
-                    new List<ResponseListDto>(), taskContext.Message.CorrelationId));
                 return;
             }
             
