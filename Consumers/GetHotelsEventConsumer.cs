@@ -21,7 +21,7 @@ namespace Hotels.Consumers
                 $"Country: {taskContext.Message.Country}\n\n"
             );
             
-            var hotels_raw = hotelContext.Hotels.Where(b => !b.Removed);
+            var hotels_raw = hotelContext.Hotels.Include(b => b.Rooms).Where(b => !b.Removed);
             if (!taskContext.Message.Country.Equals("any"))
             {
                 hotels_raw = hotels_raw.Where(b => b.Country.Equals(taskContext.Message.Country));
@@ -30,13 +30,19 @@ namespace Hotels.Consumers
             List<HotelItem> hotel_items = new List<HotelItem>();
             foreach (var hotel in searched_hotels)
             {
-                hotel_items.Add(new HotelItem(hotel.Id, hotel.Name, hotel.Country, hotel.BreakfastPrice, hotel.HasWifi, hotel.PriceForNightForPerson));
+                var rooms = hotel.Rooms.Where(b => !b.Removed);
+                var apartment_count = rooms.Where(b => b.Type.Equals("appartment")).Count();
+                var casual_room_count = rooms.Where(b => b.Type.Equals("2 person")).Count();
+                hotel_items.Add(new HotelItem(hotel.Id, hotel.Name, hotel.Country, hotel.BreakfastPrice,
+                    hotel.HasWifi, hotel.PriceForNightForPerson, apartment_count, casual_room_count));
             }
 
             Console.WriteLine("Hotels list:");
             foreach (var hotel in hotel_items)
             {
-                Console.WriteLine($"{ hotel.HotelItemId} { hotel.HotelName} { hotel.HotelCountry }");
+                Console.WriteLine($"{ hotel.HotelItemId} { hotel.HotelName} { hotel.HotelCountry }\n" +
+                    $"{hotel.HotelBreakfastPrice} {hotel.HotelHasWifi} {hotel.HotelPriceForNightForPerson}\n" +
+                    $"{hotel.ApartmentsAmount} {hotel.CasualRoomsAmount}");
             }
             await taskContext.RespondAsync<GetHotelsEventReply>(
                 new GetHotelsEventReply(hotel_items, taskContext.Message.CorrelationId) {
