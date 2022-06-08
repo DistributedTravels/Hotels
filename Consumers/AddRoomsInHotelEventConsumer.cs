@@ -17,18 +17,10 @@ namespace Hotels.Consumers
 
         public async Task Consume(ConsumeContext<AddRoomsInHotelEvent> taskContext)
         {
-            if (taskContext.Message.HotelName.Equals("any"))
-            {
-                Console.WriteLine(
-                    $"\n\nnot added\n" +
-                    $"can't be \"any\" in hotel name field\n\n"
-                );
-                return;
-            }
             var searched_hotels = hotelContext.Hotels
                 .Include(b => b.Rooms)
                 .Where(b => !b.Removed)
-                .Where(b => b.Name.Equals(taskContext.Message.HotelName)).ToList();
+                .Where(b => b.Id == taskContext.Message.HotelId).ToList();
             if (!searched_hotels.Any())
             {
                 Console.WriteLine(

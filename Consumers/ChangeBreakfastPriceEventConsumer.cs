@@ -19,25 +19,17 @@ namespace Hotels.Consumers
 
         public async Task Consume(ConsumeContext<ChangeBreakfastPriceEvent> taskContext)
         {
-            if (taskContext.Message.HotelName.Equals("any"))
-            {
-                Console.WriteLine(
-                    $"\n\nnot changed\n" +
-                    $"can't be \"any\" in hotel name field\n\n"
-                );
-                return;
-            }
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.Hotel.Name.Equals(taskContext.Message.HotelName))
+                .Where(b => b.Hotel.Id == taskContext.Message.HotelId)
                 .Where(b => !b.Hotel.Removed)
                 .Where(b => !b.Removed);
             Hotel searched_hotel;
             if (!searched_rooms_query.ToList().Any())
             {
                 var searched_hotels = hotelContext.Hotels
-                    .Where(b => b.Name.Equals(taskContext.Message.HotelName))
+                    .Where(b => b.Id == taskContext.Message.HotelId)
                     .Where(b => !b.Removed);
                 if (!searched_hotels.Any())
                 {

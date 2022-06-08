@@ -4,6 +4,7 @@ using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
 using Models.Reservations;
+using Models.Offers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -19,14 +20,6 @@ namespace Hotels.Consumers
 
         public async Task Consume(ConsumeContext<ChangeBasePriceEvent> taskContext)
         {
-            if (taskContext.Message.HotelName.Equals("any"))
-            {
-                Console.WriteLine(
-                    $"\n\nnot changed\n" +
-                    $"can't be \"any\" in hotel name field\n\n"
-                );
-                return;
-            }
             if (taskContext.Message.NewPrice <= 0.0)
             {
                 Console.WriteLine(
@@ -38,14 +31,14 @@ namespace Hotels.Consumers
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.Hotel.Name.Equals(taskContext.Message.HotelName))
+                .Where(b => b.Hotel.Id == taskContext.Message.HotelId)
                 .Where(b => !b.Hotel.Removed)
                 .Where(b => !b.Removed);
             Hotel searched_hotel;
             if (!searched_rooms_query.ToList().Any())
             {
                 var searched_hotels = hotelContext.Hotels
-                    .Where(b => b.Name.Equals(taskContext.Message.HotelName))
+                    .Where(b => b.Id == taskContext.Message.HotelId)
                     .Where(b => !b.Removed);
                 if (!searched_hotels.Any())
                 {
@@ -60,6 +53,15 @@ namespace Hotels.Consumers
             {
                 searched_hotel = searched_rooms_query.First().Hotel;
             }
+
+            if (searched_hotel.PriceForNightForPerson == taskContext.Message.NewPrice)
+            {
+                Console.WriteLine(
+                        $"\n\nPrice is not changed\n\n"
+                    );
+                return;
+            }
+
             var price_difference = taskContext.Message.NewPrice - searched_hotel.PriceForNightForPerson;
             var current_date = DateTime.Now.ToUniversalTime();
             HashSet<ResponseListDto> users_set = new HashSet<ResponseListDto>(new ResponseListDtoComparer());
@@ -109,6 +111,22 @@ namespace Hotels.Consumers
                         ReservationAvailable = true
                     });
             }
+            var apartments_count = searched_rooms_query.Where(b => b.Type.Equals("appartment")).Count();
+            var casual_room_count = searched_rooms_query.Where(b => b.Type.Equals("2 person")).Count();
+            await taskContext.RespondAsync<ChangesInOffersEvent>(
+                        new ChangesInOffersEvent
+                        {
+                            HotelId = searched_hotel.Id,
+                            HotelName = searched_hotel.Name,
+                            BigRoomsAvailable = apartments_count,
+                            SmallRoomsAvaialable = casual_room_count,
+                            WifiAvailable = searched_hotel.HasWifi,
+                            BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                            HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
+                            TransportId = -1,
+                            TransportPricePerSeat = -1.0,
+                            PlaneAvailable = false
+                        });
         }
     }
 }

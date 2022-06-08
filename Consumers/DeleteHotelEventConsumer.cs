@@ -4,6 +4,7 @@ using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
 using Models.Reservations;
+using Models.Offers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -19,29 +20,36 @@ namespace Hotels.Consumers
 
         public async Task Consume(ConsumeContext<DeleteHotelEvent> taskContext)
         {
-            if (taskContext.Message.Name.Equals("any"))
-            {
-                Console.WriteLine(
-                    $"\n\nnot deleted\n" +
-                    $"can't be \"any\" in name field\n\n"
-                );
-                return;
-            }
-            
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.Hotel.Name.Equals(taskContext.Message.Name))
+                .Where(b => b.Hotel.Id == taskContext.Message.HotelId)
                 .Where(b => !b.Hotel.Removed);
             if (!searched_rooms_query.ToList().Any())
             {
-                if(hotelContext.Hotels.Where(b => b.Name.Equals(taskContext.Message.Name)).Any())
+                var removed_hotels = hotelContext.Hotels.Include(b => b.Rooms).Where(b => b.Id == taskContext.Message.HotelId);
+                if (removed_hotels.Any())
                 {
-                    hotelContext.Hotels.Where(b => b.Name.Equals(taskContext.Message.Name)).First().Removed = true;
+                    var removed_hotel = removed_hotels.First();
+                    removed_hotel.Removed = true;
                     hotelContext.SaveChanges();
                     Console.WriteLine(
                         $"\n\nHotel removed\n\n"
                     );
+                    await taskContext.RespondAsync<ChangesInOffersEvent>(
+                        new ChangesInOffersEvent
+                        {
+                            HotelId = removed_hotel.Id,
+                            HotelName = removed_hotel.Name,
+                            BigRoomsAvailable = 0,
+                            SmallRoomsAvaialable = 0,
+                            WifiAvailable = removed_hotel.HasWifi,
+                            BreakfastAvailable = (removed_hotel.BreakfastPrice >= 0.0 ? true : false),
+                            HotelPricePerPerson = removed_hotel.PriceForNightForPerson,
+                            TransportId = -1,
+                            TransportPricePerSeat = -1.0,
+                            PlaneAvailable = false
+                        });
                     return;
                 }
                 Console.WriteLine($"\n\nHotel is already removed\n\n");
@@ -77,6 +85,22 @@ namespace Hotels.Consumers
                         ReservationAvailable = false
                     });
             }
+            var apartments_count = searched_rooms_query.Where(b => b.Type.Equals("appartment")).Count();
+            var casual_room_count = searched_rooms_query.Where(b => b.Type.Equals("2 person")).Count();
+            await taskContext.RespondAsync<ChangesInOffersEvent>(
+                        new ChangesInOffersEvent
+                        {
+                            HotelId = searched_rooms_query.First().Hotel.Id,
+                            HotelName = searched_rooms_query.First().Hotel.Name,
+                            BigRoomsAvailable = apartments_count,
+                            SmallRoomsAvaialable = casual_room_count,
+                            WifiAvailable = searched_rooms_query.First().Hotel.HasWifi,
+                            BreakfastAvailable = (searched_rooms_query.First().Hotel.BreakfastPrice >= 0.0 ? true : false),
+                            HotelPricePerPerson = searched_rooms_query.First().Hotel.PriceForNightForPerson,
+                            TransportId = -1,
+                            TransportPricePerSeat = -1.0,
+                            PlaneAvailable = false
+                        });
         }
     }
 }
