@@ -30,9 +30,38 @@ namespace Hotels.Consumers
             List<HotelItem> hotel_items = new List<HotelItem>();
             foreach (var hotel in searched_hotels)
             {
-                var rooms = hotel.Rooms.Where(b => !b.Removed);
-                var apartment_count = rooms.Where(b => b.Type.Equals("appartment")).Count();
-                var casual_room_count = rooms.Where(b => b.Type.Equals("2 person")).Count();
+                var rooms = hotelContext.Rooms
+                .Include(b => b.Hotel)
+                .Include(b => b.Reservations)
+                .Where(b => b.Hotel.Name.Equals(hotel.Name))
+                .Where(b => !b.Hotel.Removed);
+                var all_apartments = rooms.Where(b => b.Type.Equals("appartment"));
+                var all_casual_rooms = rooms.Where(b => b.Type.Equals("2 person"));
+                var apartment_count = all_apartments.Count();
+                var casual_room_count = all_casual_rooms.Count();
+                foreach (var room in all_apartments)
+                {
+                    foreach (var reservation in room.Reservations)
+                    {
+                        if (DateTime.Compare(reservation.EndDate, taskContext.Message.BeginDate) > 0 &&
+                            DateTime.Compare(reservation.BeginDate, taskContext.Message.EndDate) < 0)
+                        {
+                            apartment_count--;
+                        }
+                    }
+                }
+                foreach (var room in all_casual_rooms)
+                {
+                    foreach (var reservation in room.Reservations)
+                    {
+                        if (DateTime.Compare(reservation.EndDate, taskContext.Message.BeginDate) > 0 &&
+                            DateTime.Compare(reservation.BeginDate, taskContext.Message.EndDate) < 0)
+                        {
+                            casual_room_count--;
+                        }
+                    }
+                }
+
                 hotel_items.Add(new HotelItem(hotel.Id, hotel.Name, hotel.Country, hotel.BreakfastPrice,
                     hotel.HasWifi, hotel.PriceForNightForPerson, apartment_count, casual_room_count));
             }

@@ -65,8 +65,13 @@ var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
 });
 busControl.Start();
 
-//await busControl.Publish<GetHotelsEvent>(
-//    new GetHotelsEvent("Grecja"));
+await busControl.Publish<GetHotelsEvent>(
+    new GetHotelsEvent
+    {
+        Country = "Hiszpania",
+        BeginDate = new DateTime(2022, 6, 12).ToUniversalTime(),
+        EndDate = new DateTime(2022, 6, 16).ToUniversalTime(),
+    });
 
 //await busControl.Publish<GetInfoFromHotelEvent>(
 //    new GetInfoFromHotelEvent(
@@ -79,15 +84,15 @@ busControl.Start();
 //await busControl.Publish<ReserveRoomsEvent>(
 //    new ReserveRoomsEvent
 //    {
-//        HotelId = 91,
-//        BeginDate = new DateTime(2022, 6, 12).ToUniversalTime(),
-//        EndDate = new DateTime(2022, 6, 16).ToUniversalTime(),
+//        HotelId = 1,
+//        BeginDate = new DateTime(2022, 6, 16).ToUniversalTime(),
+//        EndDate = new DateTime(2022, 6, 20).ToUniversalTime(),
 //        AppartmentsAmount = 1,
 //        CasualRoomAmount = 1,
 //        UserId = Guid.Parse("11111111-0000-0000-0001-000000000002"),
 //        ReservationNumber = Guid.Parse("00000000-0000-0000-0001-000000000005"),
 //        Breakfast = false,
-//        Wifi = true
+//        Wifi = false
 //    });
 
 //await busControl.Publish<UnreserveRoomsEvent>(
