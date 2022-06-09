@@ -4,6 +4,7 @@ using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Reservations;
 using Models.Hotels.Dto;
+using Models.Offers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -19,7 +20,7 @@ namespace Hotels.Consumers
 
         public async Task Consume(ConsumeContext<ChangeNamesEvent> taskContext)
         {
-            if (taskContext.Message.NewCountry.Equals("any") || taskContext.Message.NewName.Equals("any") || taskContext.Message.OldName.Equals("any"))
+            if (taskContext.Message.NewName.Equals("any"))
             {
                 Console.WriteLine(
                     $"\n\nnot changed\n" +
@@ -27,7 +28,7 @@ namespace Hotels.Consumers
                 );
                 return;
             }
-            var searched_hotels = hotelContext.Hotels.Where(b => b.Name.Equals(taskContext.Message.OldName)).Where(b => !b.Removed);
+            var searched_hotels = hotelContext.Hotels.Where(b => b.Id == taskContext.Message.HotelId).Where(b => !b.Removed);
             if (!searched_hotels.Any())
             {
                 Console.WriteLine(
@@ -37,35 +38,17 @@ namespace Hotels.Consumers
                 return;
             }
             var searched_hotel = searched_hotels.First();
-            var old_name = searched_hotel.Name;
-            var old_country = searched_hotel.Country;
-            var inform_users = false;
-            if (taskContext.Message.ChangedParameter.Equals("name"))
-            {
-                searched_hotel.Name = taskContext.Message.NewName;
-                inform_users = true;
-            }
-            else if (taskContext.Message.ChangedParameter.Equals("country"))
-            {
-                searched_hotel.Country = taskContext.Message.NewCountry;
-            }
-            else if (taskContext.Message.ChangedParameter.Equals("both"))
-            {
-                searched_hotel.Name = taskContext.Message.NewName;
-                searched_hotel.Country = taskContext.Message.NewCountry;
-                inform_users = true;
-            }
-            else
+            if (searched_hotel.Name.Equals(taskContext.Message.NewName)) 
             {
                 Console.WriteLine(
                     $"\n\nnot changed\n" +
-                    $"wrong ChangedParameter value\n\n"
+                    $"same name\n\n"
                 );
                 return;
             }
+            searched_hotel.Name = taskContext.Message.NewName;
             hotelContext.SaveChanges();
             Console.WriteLine($"\n\nchanged\n\n");
-            if (!inform_users) return;
 
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
@@ -110,6 +93,23 @@ namespace Hotels.Consumers
                         ReservationAvailable = true
                     });
             }
+            var room_numbers = AdditionalFunctions.calculate_rooms_count(
+                searched_rooms_query.ToList(), taskContext.Message.CreationDate,
+                taskContext.Message.CreationDate.AddDays(1));
+            await taskContext.RespondAsync<ChangesInOffersEvent>(
+                new ChangesInOffersEvent
+                {
+                    HotelId = searched_hotel.Id,
+                    HotelName = searched_hotel.Name,
+                    BigRoomsAvailable = room_numbers.apartment_count,
+                    SmallRoomsAvaialable = room_numbers.casual_room_count,
+                    WifiAvailable = searched_hotel.HasWifi,
+                    BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                    HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
+                    TransportId = -1,
+                    TransportPricePerSeat = -1.0,
+                    PlaneAvailable = false
+                });
         }
     }
 }

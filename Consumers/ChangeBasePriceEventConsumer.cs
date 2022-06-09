@@ -63,7 +63,7 @@ namespace Hotels.Consumers
             }
 
             var price_difference = taskContext.Message.NewPrice - searched_hotel.PriceForNightForPerson;
-            var current_date = DateTime.Now.ToUniversalTime();
+            var current_date = taskContext.Message.CreationDate;
             HashSet<ResponseListDto> users_set = new HashSet<ResponseListDto>(new ResponseListDtoComparer());
             foreach (var searched_room in searched_rooms_query.ToList())
             {
@@ -111,22 +111,23 @@ namespace Hotels.Consumers
                         ReservationAvailable = true
                     });
             }
-            var apartments_count = searched_rooms_query.Where(b => b.Type.Equals("appartment")).Count();
-            var casual_room_count = searched_rooms_query.Where(b => b.Type.Equals("2 person")).Count();
+            var room_numbers = AdditionalFunctions.calculate_rooms_count(
+                searched_rooms_query.ToList(), taskContext.Message.CreationDate,
+                taskContext.Message.CreationDate.AddDays(1));
             await taskContext.RespondAsync<ChangesInOffersEvent>(
-                        new ChangesInOffersEvent
-                        {
-                            HotelId = searched_hotel.Id,
-                            HotelName = searched_hotel.Name,
-                            BigRoomsAvailable = apartments_count,
-                            SmallRoomsAvaialable = casual_room_count,
-                            WifiAvailable = searched_hotel.HasWifi,
-                            BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
-                            HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
-                            TransportId = -1,
-                            TransportPricePerSeat = -1.0,
-                            PlaneAvailable = false
-                        });
+                new ChangesInOffersEvent
+                {
+                    HotelId = searched_hotel.Id,
+                    HotelName = searched_hotel.Name,
+                    BigRoomsAvailable = room_numbers.apartment_count,
+                    SmallRoomsAvaialable = room_numbers.casual_room_count,
+                    WifiAvailable = searched_hotel.HasWifi,
+                    BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                    HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
+                    TransportId = -1,
+                    TransportPricePerSeat = -1.0,
+                    PlaneAvailable = false
+                });
         }
     }
 }

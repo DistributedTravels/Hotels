@@ -27,6 +27,13 @@ namespace Hotels.Consumers
                 $"Breakfast: {taskContext.Message.Breakfast},\n" +
                 $"Internet: {taskContext.Message.Wifi}\n\n"
             );
+            if (DateTime.Compare(taskContext.Message.BeginDate, taskContext.Message.EndDate) >= 0)
+            {
+                Console.WriteLine(
+                    $"\n\nEnd date must be greater than begin date\n\n"
+                );
+                return;
+            }
 
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)

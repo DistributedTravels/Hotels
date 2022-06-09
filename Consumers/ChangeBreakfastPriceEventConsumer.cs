@@ -4,6 +4,7 @@ using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
 using Models.Reservations;
+using Models.Offers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -44,6 +45,13 @@ namespace Hotels.Consumers
             {
                 searched_hotel = searched_rooms_query.First().Hotel;
             }
+            if (searched_hotel.BreakfastPrice == taskContext.Message.NewPrice)
+            {
+                Console.WriteLine(
+                    $"\n\nnot changed\n\n"
+                );
+                return;
+            }
             if (searched_hotel.BreakfastPrice < 0.0 && taskContext.Message.NewPrice < 0.0)
             {
                 Console.WriteLine(
@@ -52,6 +60,9 @@ namespace Hotels.Consumers
                 );
                 return;
             }
+            var room_numbers = AdditionalFunctions.calculate_rooms_count(
+                searched_rooms_query.ToList(), taskContext.Message.CreationDate,
+                taskContext.Message.CreationDate.AddDays(1));
             if (searched_hotel.BreakfastPrice < 0.0 && taskContext.Message.NewPrice >= 0.0)
             {
                 searched_hotel.BreakfastPrice = taskContext.Message.NewPrice;
@@ -59,9 +70,23 @@ namespace Hotels.Consumers
                 Console.WriteLine(
                     $"\n\nPrice of breakfast set\n\n"
                 );
+                await taskContext.RespondAsync<ChangesInOffersEvent>(
+                    new ChangesInOffersEvent
+                    {
+                        HotelId = searched_hotel.Id,
+                        HotelName = searched_hotel.Name,
+                        BigRoomsAvailable = room_numbers.apartment_count,
+                        SmallRoomsAvaialable = room_numbers.casual_room_count,
+                        WifiAvailable = searched_hotel.HasWifi,
+                        BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                        HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
+                        TransportId = -1,
+                        TransportPricePerSeat = -1.0,
+                        PlaneAvailable = false
+                    });
                 return;
             }
-            var current_date = DateTime.Now.ToUniversalTime();
+            var current_date = taskContext.Message.CreationDate;
             HashSet<ResponseListDto> users_set = new HashSet<ResponseListDto>(new ResponseListDtoComparer());
             foreach (var searched_room in searched_rooms_query.ToList())
             {
@@ -121,6 +146,20 @@ namespace Hotels.Consumers
                         ReservationAvailable = true
                     });
             }
+            await taskContext.RespondAsync<ChangesInOffersEvent>(
+                new ChangesInOffersEvent
+                {
+                    HotelId = searched_hotel.Id,
+                    HotelName = searched_hotel.Name,
+                    BigRoomsAvailable = room_numbers.apartment_count,
+                    SmallRoomsAvaialable = room_numbers.casual_room_count,
+                    WifiAvailable = searched_hotel.HasWifi,
+                    BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                    HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
+                    TransportId = -1,
+                    TransportPricePerSeat = -1.0,
+                    PlaneAvailable = false
+                });
         }
     }
 }

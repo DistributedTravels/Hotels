@@ -20,7 +20,14 @@ namespace Hotels.Consumers
                 $"\n\nReceived message:\n" +
                 $"Country: {taskContext.Message.Country}\n\n"
             );
-            
+            if (DateTime.Compare(taskContext.Message.BeginDate, taskContext.Message.EndDate) >= 0)
+            {
+                Console.WriteLine(
+                    $"\n\nEnd date must be greater than begin date\n\n"
+                );
+                return;
+            }
+
             var hotels_raw = hotelContext.Hotels.Include(b => b.Rooms).Where(b => !b.Removed);
             if (!taskContext.Message.Country.Equals("any"))
             {
@@ -35,35 +42,10 @@ namespace Hotels.Consumers
                 .Include(b => b.Reservations)
                 .Where(b => b.Hotel.Name.Equals(hotel.Name))
                 .Where(b => !b.Hotel.Removed);
-                var all_apartments = rooms.Where(b => b.Type.Equals("appartment"));
-                var all_casual_rooms = rooms.Where(b => b.Type.Equals("2 person"));
-                var apartment_count = all_apartments.Count();
-                var casual_room_count = all_casual_rooms.Count();
-                foreach (var room in all_apartments)
-                {
-                    foreach (var reservation in room.Reservations)
-                    {
-                        if (DateTime.Compare(reservation.EndDate, taskContext.Message.BeginDate) > 0 &&
-                            DateTime.Compare(reservation.BeginDate, taskContext.Message.EndDate) < 0)
-                        {
-                            apartment_count--;
-                        }
-                    }
-                }
-                foreach (var room in all_casual_rooms)
-                {
-                    foreach (var reservation in room.Reservations)
-                    {
-                        if (DateTime.Compare(reservation.EndDate, taskContext.Message.BeginDate) > 0 &&
-                            DateTime.Compare(reservation.BeginDate, taskContext.Message.EndDate) < 0)
-                        {
-                            casual_room_count--;
-                        }
-                    }
-                }
+                var room_numbers = AdditionalFunctions.calculate_rooms_count(rooms.ToList(), taskContext.Message.BeginDate, taskContext.Message.EndDate);
 
                 hotel_items.Add(new HotelItem(hotel.Id, hotel.Name, hotel.Country, hotel.BreakfastPrice,
-                    hotel.HasWifi, hotel.PriceForNightForPerson, apartment_count, casual_room_count));
+                    hotel.HasWifi, hotel.PriceForNightForPerson, room_numbers.apartment_count, room_numbers.casual_room_count));
             }
 
             Console.WriteLine("Hotels list:");

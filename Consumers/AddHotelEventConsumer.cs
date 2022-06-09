@@ -2,6 +2,7 @@
 using Models.Hotels;
 using Hotels.Database;
 using Hotels.Database.Tables;
+using Models.Offers;
 
 using Microsoft.EntityFrameworkCore;
 

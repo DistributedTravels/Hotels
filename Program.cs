@@ -65,13 +65,13 @@ var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
 });
 busControl.Start();
 
-await busControl.Publish<GetHotelsEvent>(
-    new GetHotelsEvent
-    {
-        Country = "Hiszpania",
-        BeginDate = new DateTime(2022, 6, 12).ToUniversalTime(),
-        EndDate = new DateTime(2022, 6, 16).ToUniversalTime(),
-    });
+//await busControl.Publish<GetHotelsEvent>(
+//    new GetHotelsEvent
+//    {
+//        Country = "Hiszpania",
+//        BeginDate = new DateTime(2022, 6, 12).ToUniversalTime(),
+//        EndDate = new DateTime(2022, 6, 17).ToUniversalTime(),
+//    });
 
 //await busControl.Publish<GetInfoFromHotelEvent>(
 //    new GetInfoFromHotelEvent(
@@ -114,13 +114,13 @@ await busControl.Publish<GetHotelsEvent>(
 //await busControl.Publish<DeleteHotelEvent>(
 //    new DeleteHotelEvent
 //    {
-//        Name = "abc"
+//        HotelId = 1
 //    });
 
 //await busControl.Publish<AddRoomsInHotelEvent>(
 //    new AddRoomsInHotelEvent
 //    {
-//        HotelName = "abc",
+//        HotelId = 1,
 //        AppartmentsAmountToAdd = 2,
 //        CasualRoomAmountToAdd = 1,
 //    });
@@ -128,7 +128,7 @@ await busControl.Publish<GetHotelsEvent>(
 //await busControl.Publish<DeleteRoomsInHotelEvent>(
 //    new DeleteRoomsInHotelEvent
 //    {
-//        HotelName = "abc",
+//        HotelId = 1,
 //        AppartmentsAmountToDelete = 1,
 //        CasualRoomAmountToDelete = 2,
 //    });
@@ -136,31 +136,29 @@ await busControl.Publish<GetHotelsEvent>(
 //await busControl.Publish<ChangeBasePriceEvent>(
 //    new ChangeBasePriceEvent
 //    {
-//        HotelName = "abc",
+//        HotelId = 1,
 //        NewPrice = 48.0
 //    });
 
 //await busControl.Publish<ChangeBreakfastPriceEvent>(
 //    new ChangeBreakfastPriceEvent
 //    {
-//        HotelName = "abc",
+//        HotelId = 1,
 //        NewPrice = -1.0
 //    });
 
 //await busControl.Publish<ChangeWifiAvailabilityEvent>(
 //    new ChangeWifiAvailabilityEvent
 //    {
-//        HotelName = "abc",
+//        HotelId = 1,
 //        Wifi = true
 //    });
 
 //await busControl.Publish<ChangeNamesEvent>(
 //    new ChangeNamesEvent
 //    {
-//        ChangedParameter = "name",
-//        OldName = "abc",
-//        NewName = "def",
-//        NewCountry = "wololo"
+//        HotelId = 1,
+//        NewName = "def"
 //    });
 
 busControl.Stop();

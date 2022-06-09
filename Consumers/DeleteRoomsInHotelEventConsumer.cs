@@ -4,6 +4,7 @@ using Hotels.Database;
 using Hotels.Database.Tables;
 using Models.Hotels.Dto;
 using Models.Reservations;
+using Models.Offers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -19,18 +20,10 @@ namespace Hotels.Consumers
 
         public async Task Consume(ConsumeContext<DeleteRoomsInHotelEvent> taskContext)
         {
-            if (taskContext.Message.HotelName.Equals("any"))
-            {
-                Console.WriteLine(
-                    $"\n\nnot deleted\n" +
-                    $"can't be \"any\" in hotel name field\n\n"
-                );
-                return;
-            }
             var searched_rooms_query = hotelContext.Rooms
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
-                .Where(b => b.Hotel.Name.Equals(taskContext.Message.HotelName))
+                .Where(b => b.Hotel.Id == taskContext.Message.HotelId)
                 .Where(b => !b.Hotel.Removed);
             if (!searched_rooms_query.ToList().Any())
             {
@@ -58,7 +51,15 @@ namespace Hotels.Consumers
                 );
                 return;
             }
-            var current_date = DateTime.Now.ToUniversalTime();
+            if (taskContext.Message.AppartmentsAmountToDelete == 0 && taskContext.Message.CasualRoomAmountToDelete == 0)
+            {
+                Console.WriteLine(
+                    $"\n\nnot deleted\n" +
+                    $"amount unchanged\n\n"
+                );
+                return;
+            }
+            var current_date = taskContext.Message.CreationDate;
             HashSet<ResponseListDto> users_set = new HashSet<ResponseListDto>(new ResponseListDtoComparer());
             AdditionalFunctions.check_rooms_as_deleted(searched_appartments, users_set, current_date);
             AdditionalFunctions.check_rooms_as_deleted(searched_casual_rooms, users_set, current_date);
@@ -86,6 +87,23 @@ namespace Hotels.Consumers
                         ReservationAvailable = false
                     });
             }
+            var room_numbers = AdditionalFunctions.calculate_rooms_count(
+                searched_rooms_query.ToList(), taskContext.Message.CreationDate,
+                taskContext.Message.CreationDate.AddDays(1));
+            await taskContext.RespondAsync<ChangesInOffersEvent>(
+                new ChangesInOffersEvent
+                {
+                    HotelId = searched_rooms_query.First().Hotel.Id,
+                    HotelName = searched_rooms_query.First().Hotel.Name,
+                    BigRoomsAvailable = room_numbers.apartment_count,
+                    SmallRoomsAvaialable = room_numbers.casual_room_count,
+                    WifiAvailable = searched_rooms_query.First().Hotel.HasWifi,
+                    BreakfastAvailable = (searched_rooms_query.First().Hotel.BreakfastPrice >= 0.0 ? true : false),
+                    HotelPricePerPerson = searched_rooms_query.First().Hotel.PriceForNightForPerson,
+                    TransportId = -1,
+                    TransportPricePerSeat = -1.0,
+                    PlaneAvailable = false
+                });
         }
     }
 }
