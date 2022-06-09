@@ -82,7 +82,8 @@ namespace Hotels.Consumers
                         HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
                         TransportId = -1,
                         TransportPricePerSeat = -1.0,
-                        PlaneAvailable = false
+                        PlaneAvailable = false,
+                        BreakfastPrice = searched_hotel.BreakfastPrice
                     });
                 return;
             }
@@ -158,7 +159,8 @@ namespace Hotels.Consumers
                     HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
                     TransportId = -1,
                     TransportPricePerSeat = -1.0,
-                    PlaneAvailable = false
+                    PlaneAvailable = false,
+                    BreakfastPrice = searched_hotel.BreakfastPrice
                 });
         }
     }

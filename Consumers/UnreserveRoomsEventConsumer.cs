@@ -62,7 +62,8 @@ namespace Hotels.Consumers
                         HotelPricePerPerson = searched_rooms_query.First().Hotel.PriceForNightForPerson,
                         TransportId = -1,
                         TransportPricePerSeat = -1.0,
-                        PlaneAvailable = false
+                        PlaneAvailable = false,
+                        BreakfastPrice = searched_rooms_query.First().Hotel.BreakfastPrice
                     });
             }
             else
