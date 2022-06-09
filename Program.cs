@@ -97,7 +97,7 @@ busControl.Start();
 
 //await busControl.Publish<UnreserveRoomsEvent>(
 //    new UnreserveRoomsEvent(
-//        Guid.Parse("00000000-0000-0000-0001-000000000001")));
+//        Guid.Parse("00000000-0000-0000-0001-000000000005")));
 
 //await busControl.Publish<AddHotelEvent>(
 //    new AddHotelEvent
