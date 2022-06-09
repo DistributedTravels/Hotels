@@ -61,8 +61,7 @@ namespace Hotels.Consumers
                 return;
             }
             var room_numbers = AdditionalFunctions.calculate_rooms_count(
-                searched_rooms_query.ToList(), taskContext.Message.CreationDate,
-                taskContext.Message.CreationDate.AddDays(1));
+                searched_rooms_query.ToList(), taskContext.Message.CreationDate);
             if (searched_hotel.BreakfastPrice < 0.0 && taskContext.Message.NewPrice >= 0.0)
             {
                 searched_hotel.BreakfastPrice = taskContext.Message.NewPrice;

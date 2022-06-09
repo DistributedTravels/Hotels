@@ -89,8 +89,7 @@ namespace Hotels.Consumers
                     });
             }
             var room_numbers = AdditionalFunctions.calculate_rooms_count(
-                searched_rooms, taskContext.Message.CreationDate,
-                taskContext.Message.CreationDate.AddDays(1));
+                searched_rooms, taskContext.Message.CreationDate);
             await taskContext.RespondAsync<ChangesInOffersEvent>(
                 new ChangesInOffersEvent
                 {

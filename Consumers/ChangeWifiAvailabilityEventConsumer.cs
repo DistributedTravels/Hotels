@@ -53,8 +53,7 @@ namespace Hotels.Consumers
                 return;
             }
             var room_numbers = AdditionalFunctions.calculate_rooms_count(
-                searched_rooms_query.ToList(), taskContext.Message.CreationDate,
-                taskContext.Message.CreationDate.AddDays(1));
+                searched_rooms_query.ToList(), taskContext.Message.CreationDate);
             if (!searched_hotel.HasWifi && taskContext.Message.Wifi)
             {
                 searched_hotel.HasWifi = taskContext.Message.Wifi;

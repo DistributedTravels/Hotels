@@ -129,8 +129,7 @@ namespace Hotels.Consumers
                         results.price,
                         taskContext.Message.CorrelationId));
                 var room_numbers = AdditionalFunctions.calculate_rooms_count(
-                    searched_rooms_query.ToList(), taskContext.Message.CreationDate,
-                    taskContext.Message.CreationDate.AddDays(1));
+                    searched_rooms_query.ToList(), taskContext.Message.BeginDate);
                 await taskContext.RespondAsync<ChangesInOffersEvent>(
                     new ChangesInOffersEvent
                     {

@@ -127,6 +127,41 @@ namespace Hotels.Consumers
             }
         }
 
+        public static Available_room_types calculate_rooms_count(List<Room> rooms, DateTime beginDate)
+        {
+            var all_apartments = rooms.Where(b => b.Type.Equals("appartment"));
+            var all_casual_rooms = rooms.Where(b => b.Type.Equals("2 person"));
+            var apartment_count = all_apartments.Count();
+            var casual_room_count = all_casual_rooms.Count();
+            foreach (var room in all_apartments)
+            {
+                foreach (var reservation in room.Reservations)
+                {
+                    if (DateTime.Compare(beginDate, reservation.EndDate) < 0 &&
+                        DateTime.Compare(beginDate, reservation.BeginDate) >= 0)
+                    {
+                        apartment_count--;
+                    }
+                }
+            }
+            foreach (var room in all_casual_rooms)
+            {
+                foreach (var reservation in room.Reservations)
+                {
+                    if (DateTime.Compare(beginDate, reservation.EndDate) < 0 &&
+                        DateTime.Compare(beginDate, reservation.BeginDate) >= 0)
+                    {
+                        casual_room_count--;
+                    }
+                }
+            }
+            return new Available_room_types
+            {
+                apartment_count = apartment_count,
+                casual_room_count = casual_room_count
+            };
+        }
+
         public static Available_room_types calculate_rooms_count(List<Room> rooms, DateTime beginDate, DateTime endDate)
         {
             var all_apartments = rooms.Where(b => b.Type.Equals("appartment"));
@@ -138,7 +173,7 @@ namespace Hotels.Consumers
                 foreach (var reservation in room.Reservations)
                 {
                     if (DateTime.Compare(reservation.EndDate, beginDate) > 0 &&
-                        DateTime.Compare(reservation.BeginDate, endDate) < 0)
+                            DateTime.Compare(reservation.BeginDate, endDate) < 0)
                     {
                         apartment_count--;
                     }
@@ -149,7 +184,7 @@ namespace Hotels.Consumers
                 foreach (var reservation in room.Reservations)
                 {
                     if (DateTime.Compare(reservation.EndDate, beginDate) > 0 &&
-                        DateTime.Compare(reservation.BeginDate, endDate) < 0)
+                            DateTime.Compare(reservation.BeginDate, endDate) < 0)
                     {
                         casual_room_count--;
                     }

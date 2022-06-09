@@ -64,8 +64,7 @@ namespace Hotels.Consumers
                 .Where(b => !b.Hotel.Removed)
                 .Where(b => !b.Removed);
             var room_numbers = AdditionalFunctions.calculate_rooms_count(
-                searched_rooms_query.ToList(), taskContext.Message.CreationDate,
-                taskContext.Message.CreationDate.AddDays(1));
+                searched_rooms_query.ToList(), taskContext.Message.CreationDate);
             await taskContext.RespondAsync<ChangesInOffersEvent>(
                 new ChangesInOffersEvent
                 {
