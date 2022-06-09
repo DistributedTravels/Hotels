@@ -114,7 +114,7 @@ busControl.Start();
 //await busControl.Publish<DeleteHotelEvent>(
 //    new DeleteHotelEvent
 //    {
-//        HotelId = 1
+//        HotelId = 5
 //    });
 
 //await busControl.Publish<AddRoomsInHotelEvent>(

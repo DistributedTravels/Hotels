@@ -24,40 +24,29 @@ namespace Hotels.Consumers
                 .Include(b => b.Hotel)
                 .Include(b => b.Reservations)
                 .Where(b => b.Hotel.Id == taskContext.Message.HotelId)
-                .Where(b => !b.Hotel.Removed);
+                .Where(b => !b.Hotel.Removed)
+                .Where(b => !b.Removed);
+            Hotel searched_hotel;
             if (!searched_rooms_query.ToList().Any())
             {
-                var removed_hotels = hotelContext.Hotels.Include(b => b.Rooms).Where(b => b.Id == taskContext.Message.HotelId);
-                if (removed_hotels.Any())
+                var searched_hotels = hotelContext.Hotels
+                    .Where(b => b.Id == taskContext.Message.HotelId)
+                    .Where(b => !b.Removed);
+                if (!searched_hotels.Any())
                 {
-                    var removed_hotel = removed_hotels.First();
-                    removed_hotel.Removed = true;
-                    hotelContext.SaveChanges();
                     Console.WriteLine(
-                        $"\n\nHotel removed\n\n"
+                        $"\n\nHotel is already removed or rooms uncorrect\n\n"
                     );
-                    await taskContext.RespondAsync<ChangesInOffersEvent>(
-                        new ChangesInOffersEvent
-                        {
-                            HotelId = removed_hotel.Id,
-                            HotelName = removed_hotel.Name,
-                            BigRoomsAvailable = 0,
-                            SmallRoomsAvaialable = 0,
-                            WifiAvailable = removed_hotel.HasWifi,
-                            BreakfastAvailable = (removed_hotel.BreakfastPrice >= 0.0 ? true : false),
-                            HotelPricePerPerson = removed_hotel.PriceForNightForPerson,
-                            TransportId = -1,
-                            TransportPricePerSeat = -1.0,
-                            PlaneAvailable = false
-                        });
                     return;
                 }
-                Console.WriteLine($"\n\nHotel is already removed\n\n");
-                return;
+                searched_hotel = searched_hotels.First();
+            }
+            else
+            {
+                searched_hotel = searched_rooms_query.First().Hotel;
             }
 
-            searched_rooms_query.First().Hotel.Removed = true;
-            searched_rooms_query = searched_rooms_query.Where(b => !b.Removed);
+            searched_hotel.Removed = true;
             var current_date = taskContext.Message.CreationDate;
             HashSet<ResponseListDto> users_set = new HashSet<ResponseListDto>(new ResponseListDtoComparer());
             AdditionalFunctions.check_rooms_as_deleted(searched_rooms_query.ToList(), users_set, current_date);
@@ -72,11 +61,11 @@ namespace Hotels.Consumers
                         ReservationId = user.ReservationNumber,
                         ChangesInHotel = new HotelChange
                         {
-                            HotelId = searched_rooms_query.First().Hotel.Id,
-                            HotelName = searched_rooms_query.First().Hotel.Name,
+                            HotelId = searched_hotel.Id,
+                            HotelName = searched_hotel.Name,
                             ChangeInHotelPrice = user.CalculatedCost,
-                            WifiAvailable = searched_rooms_query.First().Hotel.HasWifi,
-                            BreakfastAvailable = (searched_rooms_query.First().Hotel.BreakfastPrice >= 0.0 ? true : false),
+                            WifiAvailable = searched_hotel.HasWifi,
+                            BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
                             HotelAvailable = false,
                             BigRoomNumberChange = user.AppartmentsAmount,
                             SmallRoomNumberChange = user.CasualRoomsAmount
@@ -91,13 +80,13 @@ namespace Hotels.Consumers
             await taskContext.RespondAsync<ChangesInOffersEvent>(
                 new ChangesInOffersEvent
                 {
-                    HotelId = searched_rooms_query.First().Hotel.Id,
-                    HotelName = searched_rooms_query.First().Hotel.Name,
+                    HotelId = searched_hotel.Id,
+                    HotelName = searched_hotel.Name,
                     BigRoomsAvailable = room_numbers.apartment_count,
                     SmallRoomsAvaialable = room_numbers.casual_room_count,
-                    WifiAvailable = searched_rooms_query.First().Hotel.HasWifi,
-                    BreakfastAvailable = (searched_rooms_query.First().Hotel.BreakfastPrice >= 0.0 ? true : false),
-                    HotelPricePerPerson = searched_rooms_query.First().Hotel.PriceForNightForPerson,
+                    WifiAvailable = searched_hotel.HasWifi,
+                    BreakfastAvailable = (searched_hotel.BreakfastPrice >= 0.0 ? true : false),
+                    HotelPricePerPerson = searched_hotel.PriceForNightForPerson,
                     TransportId = -1,
                     TransportPricePerSeat = -1.0,
                     PlaneAvailable = false
